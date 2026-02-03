@@ -1,0 +1,2088 @@
+/* 
+ * Simple CSS Framework
+ * A lightweight, customizable CSS framework with semantic styling
+ */
+
+/* -----------------------------------------------------------------------------
+ * Table of Contents:
+ * 1. CSS Reset / Normalize
+ * 2. Variables
+ * 3. Base Styles
+ * 4. Typography
+ * 5. Layout & Grid
+ * 6. Navigation
+ * 7. Forms
+ * 8. Tables
+ * 9. Buttons
+ * 10. Images
+ * 11. Utility Classes
+ * 12. Theme (Dark Mode)
+ * 13. Media Queries
+ * 14. Footer
+ * 15. Modal
+ * 16. Cross-browser compatibility
+ * 17. Google Fonts Integration
+ * -------------------------------------------------------------------------- */
+
+/* -----------------------------------------------------------------------------
+ * 1. CSS Reset / Normalize
+ * -------------------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* Remove default margin */
+body,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+figure,
+blockquote,
+dl,
+dd {
+    margin: 0;
+}
+
+/* Set core body defaults */
+body {
+    min-height: 100vh;
+    scroll-behavior: smooth;
+    text-rendering: optimizeSpeed;
+    line-height: 1.5;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Make images easier to work with */
+img,
+picture {
+    max-width: 100%;
+    display: block;
+}
+
+/* Inherit fonts for inputs and buttons */
+input,
+button,
+textarea,
+select {
+    font: inherit;
+}
+
+/* Remove list styles on ul, ol elements */
+ul,
+ol {
+    list-style: none;
+}
+
+/* Remove default styling from links */
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* Remove all animations and transitions for people that prefer not to see them */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* -----------------------------------------------------------------------------
+   * 2. Variables
+   * -------------------------------------------------------------------------- */
+
+:root {
+    /* Light mode (default) */
+    /* Colors */
+    --color-primary: #3b82f6;
+    /* Blue */
+    --color-primary-dark: #1d4ed8;
+    /* Darker blue */
+    --color-primary-light: #93c5fd;
+    /* Lighter blue */
+
+    --color-secondary: #8b5cf6;
+    /* Purple */
+    --color-secondary-dark: #6d28d9;
+    /* Darker purple */
+    --color-secondary-light: #c4b5fd;
+    /* Lighter purple */
+
+    --color-success: #10b981;
+    /* Green */
+    --color-success-dark: #059669;
+    /* Darker green */
+    --color-success-light: #6ee7b7;
+    /* Lighter green */
+
+    --color-danger: #ef4444;
+    /* Red */
+    --color-danger-dark: #b91c1c;
+    /* Darker red */
+    --color-danger-light: #fca5a5;
+    /* Lighter red */
+
+    --color-bg: #ffffff;
+    /* Background color */
+    --color-bg-alt: #f3f4f6;
+    /* Alternative background color */
+
+    --color-text: #1f2937;
+    /* Text color */
+    --color-text-light: #6b7280;
+    /* Lighter text */
+    --color-text-dark: #111827;
+    /* Darker text */
+
+    --color-border: #e5e7eb;
+    /* Border color */
+    --color-border-dark: #d1d5db;
+    /* Darker border */
+
+    /* Typography */
+    --font-family-sans:
+        system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    --font-family-serif: Georgia, Cambria, "Times New Roman", Times, serif;
+    --font-family-mono: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+    --font-size-base: 1rem;
+    /* 16px at default browser settings */
+    --font-size-xs: 0.75rem;
+    /* 12px */
+    --font-size-sm: 0.875rem;
+    /* 14px */
+    --font-size-lg: 1.125rem;
+    /* 18px */
+    --font-size-xl: 1.25rem;
+    /* 20px */
+    --font-size-2xl: 1.5rem;
+    /* 24px */
+    --font-size-3xl: 1.875rem;
+    /* 30px */
+    --font-size-4xl: 2.25rem;
+    /* 36px */
+    --font-size-5xl: 3rem;
+    /* 48px */
+
+    --line-height-tight: 1.25;
+    /* Compact */
+    --line-height-base: 1.5;
+    /* Default */
+    --line-height-loose: 1.75;
+    /* Spacious */
+
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+
+    /* Spacing */
+    --spacing-0: 0;
+    --spacing-1: 0.25rem;
+    /* 4px */
+    --spacing-2: 0.5rem;
+    /* 8px */
+    --spacing-3: 0.75rem;
+    /* 12px */
+    --spacing-4: 1rem;
+    /* 16px */
+    --spacing-5: 1.5rem;
+    /* 24px */
+    --spacing-6: 2rem;
+    /* 32px */
+    --spacing-8: 3rem;
+    /* 48px */
+    --spacing-10: 4rem;
+    /* 64px */
+    --spacing-12: 5rem;
+    /* 80px */
+
+    /* Layout */
+    --container-max-width: 1200px;
+    --container-padding: var(--spacing-4);
+
+    /* Grid */
+    --grid-columns: 12;
+    --grid-gap: var(--spacing-4);
+
+    /* Borders */
+    --border-radius-sm: 0.125rem;
+    /* 2px */
+    --border-radius: 0.25rem;
+    /* 4px */
+    --border-radius-md: 0.375rem;
+    /* 6px */
+    --border-radius-lg: 0.5rem;
+    /* 8px */
+    --border-radius-xl: 1rem;
+    /* 16px */
+    --border-radius-full: 9999px;
+    /* Fully rounded */
+
+    --border-width: 1px;
+    --border-width-md: 2px;
+    --border-width-lg: 4px;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+    /* Transitions */
+    --transition-base: all 0.2s ease-in-out;
+    --transition-slow: all 0.3s ease-in-out;
+    --transition-fast: all 0.1s ease-in-out;
+
+    /* Z-index */
+    --z-index-dropdown: 1000;
+    --z-index-sticky: 1020;
+    --z-index-fixed: 1030;
+    --z-index-modal-backdrop: 1040;
+    --z-index-modal: 1050;
+    --z-index-popover: 1060;
+    --z-index-tooltip: 1070;
+}
+
+/* Dark mode colors - these will be applied when .dark-mode class is added to html */
+.dark-mode {
+    --color-bg: #1f2937;
+    --color-bg-alt: #111827;
+
+    --color-text: #f9fafb;
+    --color-text-light: #e5e7eb;
+    --color-text-dark: #ffffff;
+
+    --color-border: #374151;
+    --color-border-dark: #4b5563;
+
+    --color-primary: #60a5fa;
+    --color-primary-dark: #3b82f6;
+    --color-primary-light: #93c5fd;
+
+    --color-secondary: #a78bfa;
+    --color-secondary-dark: #8b5cf6;
+    --color-secondary-light: #c4b5fd;
+
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+}
+
+/* -----------------------------------------------------------------------------
+   * 3. Base Styles
+   * -------------------------------------------------------------------------- */
+
+html {
+    font-size: 100%;
+    -webkit-text-size-adjust: 100%;
+    font-family: var(--font-family-sans);
+    line-height: var(--line-height-base);
+    color: var(--color-text);
+}
+
+body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-family-sans);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--line-height-base);
+    overflow-x: hidden;
+}
+
+main {
+    flex: 1 0 auto;
+    /* This makes sure the footer sticks to the bottom */
+}
+
+/* For the sticky footer */
+html,
+body {
+    height: 100%;
+}
+
+/* Content container */
+.container {
+    width: 100%;
+    max-width: var(--container-max-width);
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: var(--container-padding);
+    padding-right: var(--container-padding);
+}
+
+/* -----------------------------------------------------------------------------
+   * 4. Typography
+   * -------------------------------------------------------------------------- */
+
+/* Headings */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    margin-top: 0;
+    margin-bottom: var(--spacing-4);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--line-height-tight);
+    color: var(--color-text-dark);
+}
+
+h1 {
+    font-size: var(--font-size-5xl);
+}
+
+h2 {
+    font-size: var(--font-size-4xl);
+}
+
+h3 {
+    font-size: var(--font-size-3xl);
+}
+
+h4 {
+    font-size: var(--font-size-2xl);
+}
+
+h5 {
+    font-size: var(--font-size-xl);
+}
+
+h6 {
+    font-size: var(--font-size-lg);
+}
+
+/* Paragraphs */
+p {
+    margin-top: 0;
+    margin-bottom: var(--spacing-4);
+}
+
+/* Lead paragraph */
+.lead {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--line-height-loose);
+    margin-bottom: var(--spacing-6);
+}
+
+/* Links */
+a {
+    color: var(--color-primary);
+    text-decoration: underline;
+    transition: var(--transition-base);
+}
+
+a:hover {
+    color: var(--color-primary-dark);
+}
+
+/* Lists */
+ul,
+ol {
+    margin-top: 0;
+    margin-bottom: var(--spacing-4);
+    padding-left: var(--spacing-6);
+}
+
+ul {
+    list-style-type: disc;
+}
+
+ol {
+    list-style-type: decimal;
+}
+
+li>ul,
+li>ol {
+    margin-bottom: 0;
+    margin-top: var(--spacing-2);
+}
+
+/* Blockquotes */
+blockquote {
+    margin-left: 0;
+    margin-right: 0;
+    margin-bottom: var(--spacing-5);
+    padding: var(--spacing-4);
+    border-left: var(--border-width-md) solid var(--color-primary);
+    background-color: var(--color-bg-alt);
+    font-style: italic;
+}
+
+blockquote p:last-child {
+    margin-bottom: 0;
+}
+
+blockquote cite {
+    display: block;
+    margin-top: var(--spacing-2);
+    font-size: var(--font-size-sm);
+    font-style: normal;
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-light);
+}
+
+/* Code */
+code,
+pre {
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-sm);
+    background-color: var(--color-bg-alt);
+    border-radius: var(--border-radius);
+}
+
+code {
+    padding: var(--spacing-1) var(--spacing-2);
+    color: var(--color-danger);
+}
+
+pre {
+    padding: var(--spacing-4);
+    margin-bottom: var(--spacing-5);
+    overflow-x: auto;
+    line-height: var(--line-height-base);
+}
+
+pre code {
+    padding: 0;
+    background-color: transparent;
+    color: inherit;
+}
+
+/* Small text */
+.small {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-light);
+}
+
+/* Mark/Highlight */
+mark {
+    background-color: var(--color-primary-light);
+    padding: var(--spacing-1);
+}
+
+/* -----------------------------------------------------------------------------
+   * 5. Layout & Grid
+   * -------------------------------------------------------------------------- */
+
+/* Layout & Grid */
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-4);
+    margin-bottom: var(--spacing-4);
+}
+
+.row:last-child {
+    margin-bottom: 0;
+}
+
+.row-tight {
+    gap: var(--spacing-2);
+    margin-bottom: var(--spacing-2);
+}
+
+.row-loose {
+    gap: var(--spacing-6);
+    margin-bottom: var(--spacing-6);
+}
+
+/* Grid container */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    gap: var(--grid-gap);
+    margin-bottom: var(--spacing-5);
+    width: 100%;
+}
+
+/* Default column spans all on mobile, 1 column on larger screens */
+.column {
+    grid-column: span 1;
+    background-color: var(--color-bg-alt);
+    padding: var(--spacing-4);
+    border-radius: var(--border-radius);
+}
+
+/* Column span classes */
+.column-1 {
+    grid-column: span 1;
+}
+
+.column-2 {
+    grid-column: span 2;
+}
+
+.column-3 {
+    grid-column: span 3;
+}
+
+.column-4 {
+    grid-column: span 4;
+}
+
+.column-5 {
+    grid-column: span 5;
+}
+
+.column-6 {
+    grid-column: span 6;
+}
+
+.column-7 {
+    grid-column: span 7;
+}
+
+.column-8 {
+    grid-column: span 8;
+}
+
+.column-9 {
+    grid-column: span 9;
+}
+
+.column-10 {
+    grid-column: span 10;
+}
+
+.column-11 {
+    grid-column: span 11;
+}
+
+.column-12 {
+    grid-column: span 12;
+}
+
+/* In mobile view, make each grid item take full width by default */
+@media (max-width: 768px) {
+    .column {
+        grid-column: span 1;
+    }
+
+    .grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Section spacing */
+section,
+aside {
+    margin-bottom: var(--spacing-8);
+    padding-top: var(--spacing-4);
+    padding-bottom: var(--spacing-4);
+}
+
+/* -----------------------------------------------------------------------------
+   * 6. Navigation
+   * -------------------------------------------------------------------------- */
+
+/* Main navigation */
+.main-nav {
+    background-color: var(--color-bg-alt);
+    box-shadow: var(--shadow);
+    padding: var(--spacing-3) 0;
+    position: sticky;
+    top: 0;
+    z-index: var(--z-index-sticky);
+}
+
+.main-nav .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Logo */
+.logo {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary);
+    text-decoration: none;
+    padding: var(--spacing-2);
+}
+
+/* Navigation menu */
+.nav-menu {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-menu li {
+    position: relative;
+}
+
+.nav-menu a {
+    display: block;
+    padding: var(--spacing-2) var(--spacing-3);
+    text-decoration: none;
+    color: var(--color-text);
+    font-weight: var(--font-weight-medium);
+    transition: var(--transition-base);
+}
+
+.nav-menu a:hover {
+    color: var(--color-primary);
+}
+
+/* Dropdown menus */
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: var(--color-bg);
+    box-shadow: var(--shadow-md);
+    border-radius: var(--border-radius);
+    z-index: var(--z-index-dropdown);
+    min-width: 10rem;
+    padding: var(--spacing-2) 0;
+    margin: 0;
+    list-style: none;
+}
+
+.dropdown:hover .dropdown-menu {
+    display: block;
+}
+
+.dropdown-menu a {
+    padding: var(--spacing-2) var(--spacing-4);
+    white-space: nowrap;
+}
+
+/* Hamburger button for mobile */
+.nav-toggle {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    width: 2.5rem;
+    height: 2.5rem;
+    position: relative;
+    padding: 0;
+}
+
+.hamburger {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 1.5rem;
+    height: 2px;
+    background-color: var(--color-text);
+    transition: var(--transition-base);
+}
+
+.hamburger::before,
+.hamburger::after {
+    content: "";
+    position: absolute;
+    width: 1.5rem;
+    height: 2px;
+    background-color: var(--color-text);
+    transition: var(--transition-base);
+}
+
+.hamburger::before {
+    top: -8px;
+}
+
+.hamburger::after {
+    top: 8px;
+}
+
+.nav-toggle.active .hamburger {
+    background-color: transparent;
+}
+
+.nav-toggle.active .hamburger::before {
+    transform: rotate(45deg);
+    top: 0;
+}
+
+.nav-toggle.active .hamburger::after {
+    transform: rotate(-45deg);
+    top: 0;
+}
+
+/* Mobile navigation styles */
+@media (max-width: 768px) {
+    .nav-toggle {
+        display: block;
+    }
+
+    .nav-menu {
+        display: none;
+        flex-direction: column;
+        width: 100%;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        background-color: var(--color-bg);
+        box-shadow: var(--shadow-md);
+        padding: var(--spacing-2) 0;
+    }
+
+    .nav-menu.active {
+        display: flex;
+    }
+
+    .dropdown-menu {
+        position: static;
+        display: none;
+        box-shadow: none;
+        padding-left: var(--spacing-4);
+    }
+
+    .dropdown-menu a {
+        padding-left: var(--spacing-6);
+    }
+
+    .dropdown.active .dropdown-menu {
+        display: block;
+    }
+
+    .main-nav .container {
+        flex-wrap: wrap;
+    }
+}
+
+/* -----------------------------------------------------------------------------
+   * 7. Forms
+   * -------------------------------------------------------------------------- */
+
+/* Form Group */
+.form-group {
+    margin-bottom: var(--spacing-4);
+}
+
+/* Labels */
+label {
+    display: block;
+    margin-bottom: var(--spacing-2);
+    font-weight: var(--font-weight-medium);
+}
+
+/* Legend */
+legend {
+    font-weight: var(--font-weight-semibold);
+    margin-bottom: var(--spacing-3);
+    width: 100%;
+}
+
+/* Fieldset */
+fieldset {
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-4);
+    margin-bottom: var(--spacing-4);
+}
+
+/* Basic inputs */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="url"],
+input[type="tel"],
+input[type="search"],
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+input[type="month"],
+input[type="week"],
+select,
+textarea {
+    display: block;
+    width: 100%;
+    padding: var(--spacing-2) var(--spacing-3);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-base);
+    color: var(--color-text);
+    background-color: var(--color-bg);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--border-radius);
+    transition: var(--transition-base);
+}
+
+/* Input focus state */
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+/* Placeholder */
+::placeholder {
+    color: var(--color-text-light);
+    opacity: 0.7;
+}
+
+/* Disabled inputs */
+input:disabled,
+select:disabled,
+textarea:disabled {
+    background-color: var(--color-bg-alt);
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Textarea */
+textarea {
+    resize: vertical;
+    min-height: 6em;
+}
+
+/* Select */
+select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right var(--spacing-3) center;
+    background-size: 1em;
+    padding-right: var(--spacing-8);
+}
+
+/* File input */
+input[type="file"] {
+    padding: var(--spacing-2) 0;
+}
+
+/* Checkbox and Radio Styles */
+.checkbox-group,
+.radio-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: var(--spacing-2);
+}
+
+.checkbox-group label,
+.radio-group label {
+    margin-bottom: 0;
+    margin-left: var(--spacing-2);
+    font-weight: var(--font-weight-normal);
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+    cursor: pointer;
+    width: 1.25em;
+    height: 1.25em;
+}
+
+/* Range input */
+input[type="range"] {
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    background-color: var(--color-bg-alt);
+    border-radius: var(--border-radius-full);
+    outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    background-color: var(--color-primary);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    background-color: var(--color-primary);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+/* Form validation */
+input:valid,
+textarea:valid,
+select:valid {
+    border-color: var(--color-success);
+}
+
+input:invalid,
+textarea:invalid,
+select:invalid {
+    border-color: var(--color-danger);
+}
+
+/* -----------------------------------------------------------------------------
+   * 8. Tables
+   * -------------------------------------------------------------------------- */
+
+table {
+    width: 100%;
+    margin-bottom: var(--spacing-5);
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+caption {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-medium);
+    padding: var(--spacing-3);
+    text-align: left;
+    caption-side: top;
+}
+
+th,
+td {
+    padding: var(--spacing-3);
+    vertical-align: top;
+    border-bottom: var(--border-width) solid var(--color-border);
+    text-align: left;
+}
+
+thead th {
+    font-weight: var(--font-weight-semibold);
+    border-bottom: var(--border-width-md) solid var(--color-border-dark);
+    background-color: var(--color-bg-alt);
+}
+
+tbody tr:nth-child(even) {
+    background-color: var(--color-bg-alt);
+}
+
+tbody tr:hover {
+    background-color: var(--color-bg-alt);
+}
+
+tfoot td {
+    font-weight: var(--font-weight-medium);
+    background-color: var(--color-bg-alt);
+}
+
+/* Responsive tables */
+@media (max-width: 768px) {
+    table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+}
+
+/* -----------------------------------------------------------------------------
+   * 9. Buttons
+   * -------------------------------------------------------------------------- */
+
+/* Base button styles */
+button,
+.button,
+input[type="button"],
+input[type="reset"],
+input[type="submit"] {
+    display: inline-block;
+    font-weight: var(--font-weight-medium);
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    cursor: pointer;
+    user-select: none;
+    border: var(--border-width) solid transparent;
+    padding: var(--spacing-2) var(--spacing-4);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-base);
+    border-radius: var(--border-radius);
+    transition: var(--transition-base);
+    background-color: var(--color-bg-alt);
+    color: var(--color-text);
+    text-decoration: none;
+}
+
+/* Button states */
+button:hover,
+.button:hover,
+input[type="button"]:hover,
+input[type="reset"]:hover {
+    background-color: var(--color-border);
+    color: var(--color-text-dark);
+}
+
+button:focus,
+.button:focus,
+input[type="button"]:focus,
+input[type="reset"]:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+button:active,
+.button:active,
+input[type="button"]:active,
+input[type="reset"]:active {
+    background-color: var(--color-border-dark);
+}
+
+/* Primary button styles */
+button.primary,
+.button.primary,
+input[type="submit"] {
+    background-color: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+}
+
+button.primary:hover,
+.button.primary:hover,
+input[type="submit"]:hover {
+    background-color: var(--color-primary-dark);
+    border-color: var(--color-primary-dark);
+    color: white;
+}
+
+button.primary:focus,
+.button.primary:focus,
+input[type="submit"]:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+button.primary:active,
+.button.primary:active,
+input[type="submit"]:active {
+    background-color: var(--color-primary-dark);
+    border-color: var(--color-primary-dark);
+    color: white;
+}
+
+/* Button variants */
+button.secondary,
+.button.secondary {
+    background-color: var(--color-secondary);
+    color: white;
+    border-color: var(--color-secondary);
+}
+
+button.secondary:hover,
+.button.secondary:hover {
+    background-color: var(--color-secondary-dark);
+    border-color: var(--color-secondary-dark);
+}
+
+button.success,
+.button.success {
+    background-color: var(--color-success);
+    color: white;
+    border-color: var(--color-success);
+}
+
+button.success:hover,
+.button.success:hover {
+    background-color: var(--color-success-dark);
+    border-color: var(--color-success-dark);
+}
+
+button.danger,
+.button.danger {
+    background-color: var(--color-danger);
+    color: white;
+    border-color: var(--color-danger);
+}
+
+button.danger:hover,
+.button.danger:hover {
+    background-color: var(--color-danger-dark);
+    border-color: var(--color-danger-dark);
+}
+
+/* Button sizes */
+button.small,
+.button.small {
+    font-size: var(--font-size-sm);
+    padding: var(--spacing-1) var(--spacing-3);
+}
+
+button.large,
+.button.large {
+    font-size: var(--font-size-lg);
+    padding: var(--spacing-3) var(--spacing-5);
+}
+
+/* Disabled buttons */
+button:disabled,
+.button.disabled,
+input[type="button"]:disabled,
+input[type="reset"]:disabled,
+input[type="submit"]:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Button group container */
+.button-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-3);
+    align-items: center;
+}
+
+/* Button group variations */
+.button-group.vertical {
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.button-group.justify-end {
+    justify-content: flex-end;
+}
+
+.button-group.justify-center {
+    justify-content: center;
+}
+
+.button-group.justify-between {
+    justify-content: space-between;
+}
+
+/* -----------------------------------------------------------------------------
+   * 10. Images
+   * -------------------------------------------------------------------------- */
+
+/* Figure with caption */
+figure {
+    margin: 0 0 var(--spacing-5) 0;
+}
+
+figcaption {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-light);
+    margin-top: var(--spacing-2);
+    text-align: center;
+}
+
+/* Image alignment */
+figure.align-left {
+    float: left;
+    margin-right: var(--spacing-4);
+    margin-bottom: var(--spacing-4);
+    max-width: 40%;
+}
+
+figure.align-right {
+    float: right;
+    margin-left: var(--spacing-4);
+    margin-bottom: var(--spacing-4);
+    max-width: 40%;
+}
+
+/* Responsive images */
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Clear floats after floating images */
+.clearfix::after {
+    content: "";
+    clear: both;
+    display: table;
+}
+
+/* -----------------------------------------------------------------------------
+   * 11. Utility Classes
+   * -------------------------------------------------------------------------- */
+
+/* Text alignment */
+.text-left {
+    text-align: left;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.text-justify {
+    text-align: justify;
+}
+
+/* Text colors */
+.text-primary {
+    color: var(--color-primary);
+}
+
+.text-secondary {
+    color: var(--color-secondary);
+}
+
+.text-success {
+    color: var(--color-success);
+}
+
+.text-danger {
+    color: var(--color-danger);
+}
+
+.text-muted {
+    color: var(--color-text-light);
+}
+
+/* Background colors */
+.bg-primary {
+    background-color: var(--color-primary);
+    color: white;
+}
+
+.bg-secondary {
+    background-color: var(--color-secondary);
+    color: white;
+}
+
+.bg-success {
+    background-color: var(--color-success);
+    color: white;
+}
+
+.bg-danger {
+    background-color: var(--color-danger);
+    color: white;
+}
+
+.bg-light {
+    background-color: var(--color-bg-alt);
+}
+
+.bg-dark {
+    background-color: var(--color-text-dark);
+    color: var(--color-bg);
+}
+
+/* Spacing utilities */
+.m-0 {
+    margin: var(--spacing-0);
+}
+
+.m-1 {
+    margin: var(--spacing-1);
+}
+
+.m-2 {
+    margin: var(--spacing-2);
+}
+
+.m-3 {
+    margin: var(--spacing-3);
+}
+
+.m-4 {
+    margin: var(--spacing-4);
+}
+
+.m-5 {
+    margin: var(--spacing-5);
+}
+
+/* Directional margin utilities */
+.mt-0 {
+    margin-top: var(--spacing-0);
+}
+
+.mt-1 {
+    margin-top: var(--spacing-1);
+}
+
+.mt-2 {
+    margin-top: var(--spacing-2);
+}
+
+.mt-3 {
+    margin-top: var(--spacing-3);
+}
+
+.mt-4 {
+    margin-top: var(--spacing-4);
+}
+
+.mt-5 {
+    margin-top: var(--spacing-5);
+}
+
+.mb-0 {
+    margin-bottom: var(--spacing-0);
+}
+
+.mb-1 {
+    margin-bottom: var(--spacing-1);
+}
+
+.mb-2 {
+    margin-bottom: var(--spacing-2);
+}
+
+.mb-3 {
+    margin-bottom: var(--spacing-3);
+}
+
+.mb-4 {
+    margin-bottom: var(--spacing-4);
+}
+
+.mb-5 {
+    margin-bottom: var(--spacing-5);
+}
+
+.ml-0 {
+    margin-left: var(--spacing-0);
+}
+
+.ml-1 {
+    margin-left: var(--spacing-1);
+}
+
+.ml-2 {
+    margin-left: var(--spacing-2);
+}
+
+.ml-3 {
+    margin-left: var(--spacing-3);
+}
+
+.ml-4 {
+    margin-left: var(--spacing-4);
+}
+
+.ml-5 {
+    margin-left: var(--spacing-5);
+}
+
+.mr-0 {
+    margin-right: var(--spacing-0);
+}
+
+.mr-1 {
+    margin-right: var(--spacing-1);
+}
+
+.mr-2 {
+    margin-right: var(--spacing-2);
+}
+
+.mr-3 {
+    margin-right: var(--spacing-3);
+}
+
+.mr-4 {
+    margin-right: var(--spacing-4);
+}
+
+.mr-5 {
+    margin-right: var(--spacing-5);
+}
+
+.p-0 {
+    padding: var(--spacing-0);
+}
+
+.p-1 {
+    padding: var(--spacing-1);
+}
+
+.p-2 {
+    padding: var(--spacing-2);
+}
+
+.p-3 {
+    padding: var(--spacing-3);
+}
+
+.p-4 {
+    padding: var(--spacing-4);
+}
+
+.p-5 {
+    padding: var(--spacing-5);
+}
+
+/* Directional padding utilities */
+.pt-0 {
+    padding-top: var(--spacing-0);
+}
+
+.pt-1 {
+    padding-top: var(--spacing-1);
+}
+
+.pt-2 {
+    padding-top: var(--spacing-2);
+}
+
+.pt-3 {
+    padding-top: var(--spacing-3);
+}
+
+.pt-4 {
+    padding-top: var(--spacing-4);
+}
+
+.pt-5 {
+    padding-top: var(--spacing-5);
+}
+
+.pb-0 {
+    padding-bottom: var(--spacing-0);
+}
+
+.pb-1 {
+    padding-bottom: var(--spacing-1);
+}
+
+.pb-2 {
+    padding-bottom: var(--spacing-2);
+}
+
+.pb-3 {
+    padding-bottom: var(--spacing-3);
+}
+
+.pb-4 {
+    padding-bottom: var(--spacing-4);
+}
+
+.pb-5 {
+    padding-bottom: var(--spacing-5);
+}
+
+.pl-0 {
+    padding-left: var(--spacing-0);
+}
+
+.pl-1 {
+    padding-left: var(--spacing-1);
+}
+
+.pl-2 {
+    padding-left: var(--spacing-2);
+}
+
+.pl-3 {
+    padding-left: var(--spacing-3);
+}
+
+.pl-4 {
+    padding-left: var(--spacing-4);
+}
+
+.pl-5 {
+    padding-left: var(--spacing-5);
+}
+
+.pr-0 {
+    padding-right: var(--spacing-0);
+}
+
+.pr-1 {
+    padding-right: var(--spacing-1);
+}
+
+.pr-2 {
+    padding-right: var(--spacing-2);
+}
+
+.pr-3 {
+    padding-right: var(--spacing-3);
+}
+
+.pr-4 {
+    padding-right: var(--spacing-4);
+}
+
+.pr-5 {
+    padding-right: var(--spacing-5);
+}
+
+/* Visibility utilities */
+.hidden {
+    display: none !important;
+}
+
+.invisible {
+    visibility: hidden;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* Utility for wrapping long text */
+.text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* -----------------------------------------------------------------------------
+   * 12. Theme (Dark Mode)
+   * -------------------------------------------------------------------------- */
+
+/* Dark mode toggle button styling */
+#theme-switch {
+    cursor: pointer;
+    background-color: var(--color-primary);
+    color: white;
+    padding: var(--spacing-2) var(--spacing-4);
+    border-radius: var(--border-radius);
+    border: none;
+    margin: var(--spacing-4) 0;
+}
+
+/* Media query for user preference - overridden by .dark-mode class if applied */
+@media (prefers-color-scheme: dark) {
+    :root:not(.light-mode) {
+        --color-bg: #1f2937;
+        --color-bg-alt: #111827;
+
+        --color-text: #f9fafb;
+        --color-text-light: #e5e7eb;
+        --color-text-dark: #ffffff;
+
+        --color-border: #374151;
+        --color-border-dark: #4b5563;
+
+        --color-primary: #60a5fa;
+        --color-primary-dark: #3b82f6;
+        --color-primary-light: #93c5fd;
+
+        --color-secondary: #a78bfa;
+        --color-secondary-dark: #8b5cf6;
+        --color-secondary-light: #c4b5fd;
+    }
+}
+
+/* -----------------------------------------------------------------------------
+   * 13. Media Queries
+   * -------------------------------------------------------------------------- */
+
+/* Mobile (default) */
+/* Styles for mobile already established as base */
+
+/* Small tablets (portrait) */
+@media (min-width: 576px) {
+
+    /* Grid adjustments */
+    .column-sm-1 {
+        grid-column: span 1;
+    }
+
+    .column-sm-2 {
+        grid-column: span 2;
+    }
+
+    .column-sm-3 {
+        grid-column: span 3;
+    }
+
+    .column-sm-4 {
+        grid-column: span 4;
+    }
+
+    .column-sm-5 {
+        grid-column: span 5;
+    }
+
+    .column-sm-6 {
+        grid-column: span 6;
+    }
+
+    .column-sm-7 {
+        grid-column: span 7;
+    }
+
+    .column-sm-8 {
+        grid-column: span 8;
+    }
+
+    .column-sm-9 {
+        grid-column: span 9;
+    }
+
+    .column-sm-10 {
+        grid-column: span 10;
+    }
+
+    .column-sm-11 {
+        grid-column: span 11;
+    }
+
+    .column-sm-12 {
+        grid-column: span 12;
+    }
+}
+
+/* Medium devices (tablets) */
+@media (min-width: 768px) {
+
+    /* Grid adjustments */
+    .column-md-1 {
+        grid-column: span 1;
+    }
+
+    .column-md-2 {
+        grid-column: span 2;
+    }
+
+    .column-md-3 {
+        grid-column: span 3;
+    }
+
+    .column-md-4 {
+        grid-column: span 4;
+    }
+
+    .column-md-5 {
+        grid-column: span 5;
+    }
+
+    .column-md-6 {
+        grid-column: span 6;
+    }
+
+    .column-md-7 {
+        grid-column: span 7;
+    }
+
+    .column-md-8 {
+        grid-column: span 8;
+    }
+
+    .column-md-9 {
+        grid-column: span 9;
+    }
+
+    .column-md-10 {
+        grid-column: span 10;
+    }
+
+    .column-md-11 {
+        grid-column: span 11;
+    }
+
+    .column-md-12 {
+        grid-column: span 12;
+    }
+}
+
+/* Large devices (desktops) */
+@media (min-width: 992px) {
+
+    /* Grid adjustments */
+    .column-lg-1 {
+        grid-column: span 1;
+    }
+
+    .column-lg-2 {
+        grid-column: span 2;
+    }
+
+    .column-lg-3 {
+        grid-column: span 3;
+    }
+
+    .column-lg-4 {
+        grid-column: span 4;
+    }
+
+    .column-lg-5 {
+        grid-column: span 5;
+    }
+
+    .column-lg-6 {
+        grid-column: span 6;
+    }
+
+    .column-lg-7 {
+        grid-column: span 7;
+    }
+
+    .column-lg-8 {
+        grid-column: span 8;
+    }
+
+    .column-lg-9 {
+        grid-column: span 9;
+    }
+
+    .column-lg-10 {
+        grid-column: span 10;
+    }
+
+    .column-lg-11 {
+        grid-column: span 11;
+    }
+
+    .column-lg-12 {
+        grid-column: span 12;
+    }
+}
+
+/* Extra large devices (large desktops) */
+@media (min-width: 1200px) {
+
+    /* Grid adjustments */
+    .column-xl-1 {
+        grid-column: span 1;
+    }
+
+    .column-xl-2 {
+        grid-column: span 2;
+    }
+
+    .column-xl-3 {
+        grid-column: span 3;
+    }
+
+    .column-xl-4 {
+        grid-column: span 4;
+    }
+
+    .column-xl-5 {
+        grid-column: span 5;
+    }
+
+    .column-xl-6 {
+        grid-column: span 6;
+    }
+
+    .column-xl-7 {
+        grid-column: span 7;
+    }
+
+    .column-xl-8 {
+        grid-column: span 8;
+    }
+
+    .column-xl-9 {
+        grid-column: span 9;
+    }
+
+    .column-xl-10 {
+        grid-column: span 10;
+    }
+
+    .column-xl-11 {
+        grid-column: span 11;
+    }
+
+    .column-xl-12 {
+        grid-column: span 12;
+    }
+}
+
+/* -----------------------------------------------------------------------------
+   * 14. Footer
+   * -------------------------------------------------------------------------- */
+
+footer {
+    background-color: var(--color-bg-alt);
+    color: var(--color-text);
+    padding: var(--spacing-6) 0;
+    margin-top: var(--spacing-8);
+    border-top: var(--border-width) solid var(--color-border);
+}
+
+footer h3 {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--spacing-3);
+}
+
+footer ul {
+    padding-left: 0;
+    list-style: none;
+}
+
+footer li {
+    margin-bottom: var(--spacing-2);
+}
+
+footer a {
+    color: var(--color-text);
+    text-decoration: none;
+}
+
+footer a:hover {
+    color: var(--color-primary);
+    text-decoration: underline;
+}
+
+.copyright {
+    margin-top: var(--spacing-6);
+    padding-top: var(--spacing-4);
+    border-top: var(--border-width) solid var(--color-border);
+    text-align: center;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-light);
+}
+
+/* -----------------------------------------------------------------------------
+   * 15. Modal
+   * -------------------------------------------------------------------------- */
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: var(--z-index-modal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow-y: auto;
+}
+
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: -1;
+}
+
+.modal-content {
+    position: relative;
+    background-color: var(--color-bg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-lg);
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    margin: var(--spacing-4) 0;
+}
+
+.modal-wide .modal-content {
+    max-width: 900px;
+}
+
+.modal-header {
+    padding: var(--spacing-4);
+    border-bottom: var(--border-width) solid var(--color-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: var(--font-size-2xl);
+    cursor: pointer;
+    padding: var(--spacing-2);
+    color: var(--color-text-light);
+    transition: var(--transition-base);
+}
+
+.modal-close:hover {
+    color: var(--color-text);
+}
+
+.modal-body {
+    padding: var(--spacing-4);
+    overflow-y: auto;
+    flex: 1;
+}
+
+.modal-footer {
+    padding: var(--spacing-4);
+    border-top: var(--border-width) solid var(--color-border);
+    background-color: var(--color-bg-alt);
+    border-bottom-left-radius: var(--border-radius);
+    border-bottom-right-radius: var(--border-radius);
+}
+
+/* When modal is open, prevent body scrolling */
+body.modal-open {
+    overflow: hidden;
+}
+
+/* Dark mode adjustments */
+.dark-mode .modal-content {
+    background-color: var(--color-bg);
+}
+
+.dark-mode .modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+/* -----------------------------------------------------------------------------
+   * 16. Cross-browser compatibility
+   * -------------------------------------------------------------------------- */
+
+/* IE10+ specific styles */
+@media all and (-ms-high-contrast: none),
+(-ms-high-contrast: active) {
+
+    /* Enable flexbox support for sticky footer in IE */
+    body {
+        display: -ms-flexbox;
+        -ms-flex-direction: column;
+    }
+
+    main {
+        -ms-flex: 1 0 auto;
+    }
+
+    /* Fix for grid in IE */
+    .grid {
+        display: -ms-flexbox;
+        -ms-flex-wrap: wrap;
+    }
+
+    .column {
+        -ms-flex: 0 0 100%;
+        width: 100%;
+    }
+
+    @media (min-width: 768px) {
+        .column {
+            -ms-flex: 0 0 calc(100% / var(--grid-columns));
+        }
+
+        .column-2 {
+            -ms-flex: 0 0 calc(200% / var(--grid-columns));
+        }
+
+        .column-3 {
+            -ms-flex: 0 0 calc(300% / var(--grid-columns));
+        }
+
+        /* Continue for all column widths... */
+    }
+}
+
+/* Edge specific styles */
+@supports (-ms-ime-align: auto) {
+
+    /* Similar flexbox fixes for Edge as for IE */
+    .grid {
+        display: -ms-flexbox;
+        -ms-flex-wrap: wrap;
+    }
+}
+
+/* Legacy browser box-sizing polyfill support */
+html {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+/* Ensure SVG scales properly across browsers */
+svg {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Fix for older Safari versions */
+@media not all and (min-resolution: 0.001dpcm) {
+    @supports (-webkit-appearance: none) {
+        .grid {
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: flex;
+            -webkit-flex-wrap: wrap;
+            flex-wrap: wrap;
+        }
+
+        /* Safari 10.1+ specific fixes */
+        @media (min-width: 768px) {
+            .column {
+                -webkit-flex: 1;
+                flex: 1;
+            }
+        }
+    }
+}
+
+/* Print styles */
+@media print {
+    body {
+        background-color: #fff;
+        color: #000;
+    }
+
+    a {
+        color: #000;
+        text-decoration: underline;
+    }
+
+    header,
+    footer,
+    nav,
+    button,
+    .nav-toggle {
+        display: none !important;
+    }
+
+    main {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    @page {
+        margin: 2cm;
+    }
+}
+
+
+
+/* -----------------------------------------------------------------------------
+   * 17. Google Fonts Integration
+   * -------------------------------------------------------------------------- */
+
+/* 
+  To use Google Fonts, add a link tag in your HTML head, for example:
+  
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  Then update the CSS variables in the :root section:
+  
+  :root {
+    --font-family-sans: 'Roboto', system-ui, -apple-system, BlinkMacSystemFont, ...;
+  }
+  */
