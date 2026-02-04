@@ -1,0 +1,782 @@
+// This is your Prisma schema file
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum UserType {
+  ind   // Individual user (self-funded)
+  org   // Organization/School
+  stu   // Student (linked to org or self-funded)
+  admin // Administrator
+
+  @@map("user_type")
+}
+
+enum QuestionType {
+  TMCQ // Text Multiple Choice Question
+  GMCQ // Graphical Multiple Choice Question
+  DDI  // Drag-Drop Interface
+
+  @@map("question_type")
+}
+
+enum Currency {
+  GBP
+  USD
+  EUR
+
+  @@map("currency")
+}
+
+enum VoucherStatus {
+  pending
+  active
+  inactive
+
+  @@map("voucher_status")
+}
+
+// ============================================================================
+// USER MANAGEMENT
+// ============================================================================
+
+model User {
+  id          Int      @id @default(autoincrement())
+  type        UserType @default(ind)
+  name        String   @db.VarChar(255)
+  displayname String   @unique @db.VarChar(255)
+  phone       String?  @db.VarChar(255)
+  mobile      String?  @db.VarChar(255)
+  email       String   @db.VarChar(255)
+  address     String?  @db.Text
+  postcode    String?  @db.VarChar(255)
+  country     String?  @db.VarChar(255)
+
+  // Authentication (username same as email for legacy compatibility)
+  username    String    @db.VarChar(255)
+  password    String    @db.VarChar(255) // Will store bcrypt hash (60 chars)
+  resetToken  String?   @map("reset_token") @db.VarChar(255)
+  resetExpiry DateTime? @map("reset_expiry")
+  examDate    DateTime? @map("exam_date") @db.Date
+
+  // Session management
+  lastAction DateTime  @default(now()) @map("last_action")
+  sessionId  String?   @map("session_id") @db.VarChar(255)
+  sessions   UserSession[]
+
+  // Organization settings
+  licenses              Int     @default(0) // Number of student licenses (for org)
+  studentFundingCode    String? @map("student_funding_code") @db.VarChar(16)
+
+  // Subscription
+  expiry                DateTime? @db.Timestamp
+  stripeCustomerId      String?   @map("stripe_customer_id") @db.VarChar(255) // NEW: Stripe customer ID
+  stripeSubscriptionId  String?   @map("stripe_subscription_id") @db.VarChar(255) // NEW: Stripe subscription ID
+
+  // Admin flags
+  siteAdmin     Boolean @default(false) @map("site_admin")
+  forumAdmin    Boolean @default(false) @map("forum_admin")
+  questionAdmin Boolean @default(false) @map("question_admin")
+  blogAdmin     Boolean @default(false) @map("blog_admin")
+
+  // Onboarding & UI preferences
+  welcomeEmailSent             Boolean @default(false) @map("welcome_email_sent")
+  initialCheckoutComplete      Boolean @default(false) @map("initial_checkout_complete")
+  showWelcomeBox               Boolean @default(true) @map("show_welcome_box")
+  showSubscriptionRenewalBox   Boolean @default(true) @map("show_subscription_renewal_box")
+
+  // Marketing
+  whereDidYouHear      String? @map("where_did_you_hear") @db.VarChar(255)
+  whereDidYouHearOther String? @map("where_did_you_hear_other") @db.VarChar(255)
+
+  // Progress cache (denormalized for performance)
+  progressTotal Int @default(0) @map("progress_total")
+  progress1     Int @default(0) @map("progress_1")
+  progress2     Int @default(0) @map("progress_2")
+  progress3     Int @default(0) @map("progress_3")
+  progress4     Int @default(0) @map("progress_4")
+  progress5     Int @default(0) @map("progress_5")
+  progress6     Int @default(0) @map("progress_6")
+  progress7     Int @default(0) @map("progress_7")
+
+  // Stats cache
+  questionsTotal     Int @default(0) @map("questions_total")
+  questionsCorrect   Int @default(0) @map("questions_correct")
+  questionsIncorrect Int @default(0) @map("questions_incorrect")
+  testsCount         Int @default(0) @map("tests_count")
+  successfulLogins   Int @default(0) @map("successful_logins")
+
+  // Organization settings (for type=org)
+  allowOverdueAssignments                              Boolean @default(false) @map("allow_overdue_assignments")
+  allowOverdueAssignmentsPeriodDays                    Int     @default(0) @map("allow_overdue_assignments_period_days")
+  suppressTeacherAssignmentEmails                      Boolean @default(false) @map("suppress_teacher_assignment_emails")
+  suppressStudentAssignmentEmails                      Boolean @default(false) @map("suppress_student_assignment_emails")
+  suppressStudentWelcomeEmails                         Boolean @default(false) @map("suppress_student_welcome_emails")
+  expiredAssignmentsStudentVisibilityDurationDays      Int     @default(30) @map("expired_assignments_student_visibility_duration_days")
+  completeAssignmentsStudentVisibilityDurationDays     Int     @default(30) @map("complete_assignments_student_visibility_duration_days")
+
+  // Timestamps
+  dateCreated  DateTime  @default(now()) @map("date_created")
+  lastModified DateTime  @default(now()) @updatedAt @map("last_modified")
+
+  // Relations
+  tests                 Test[]
+  userQuestions         UserQuestion[]
+  assignments           Assignment[]
+  usersAssignments      UserAssignment[]
+  cartItems             CartItem[]
+  transactions          Transaction[]
+  transactionItems      TransactionItem[]
+  vouchers              Voucher[]
+  voucherUsages         VoucherUsage[]
+  voucherApplications   VoucherApplication[]
+  voucherInvitations    VoucherInvitation[]
+  progressData          ProgressData[]
+  questionsCreated      Question[]              @relation("QuestionCreator")
+  questionsModified     Question[]              @relation("QuestionModifier")
+
+  // Organization relationships
+  studentsManaged       OrgStudentUser[]        @relation("OrgManagesStudents") // When user is org
+  organizationsLinkedTo OrgStudentUser[]        @relation("StudentLinkedToOrg") // When user is student
+  groupsOwned           OrgGroup[]
+  groupMemberships      OrgStudentGroup[]
+
+  @@index([email])
+  @@index([type])
+  @@index([expiry])
+  @@index([sessionId])
+  @@map("users")
+}
+
+model UserSession {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @map("user_id")
+  sessionId  String   @map("session_id") @db.VarChar(255)
+  lastAction DateTime @map("last_action")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([userId])
+  @@map("users_sessions")
+}
+
+model DeletedUser {
+  id               Int       @id @default(autoincrement())
+  originalId       Int?      @map("original_id")
+  type             UserType  @default(ind)
+  name             String?   @db.VarChar(255)
+  displayname      String?   @db.VarChar(255)
+  phone            String?   @db.VarChar(255)
+  mobile           String?   @db.VarChar(255)
+  email            String?   @db.VarChar(255)
+  address          String?   @db.Text
+  postcode         String?   @db.VarChar(255)
+  country          String?   @db.VarChar(255)
+  username         String?   @db.VarChar(255)
+  password         String?   @db.VarChar(255)
+  lastAction       DateTime? @map("last_action")
+  licenses         Int       @default(0)
+  expiry           DateTime? @db.Timestamp
+  originalDateCreated DateTime? @map("original_date_created")
+  dateCreated      DateTime  @default(now()) @map("date_created")
+  lastModified     DateTime  @default(now()) @updatedAt @map("last_modified")
+
+  @@map("deleted_users")
+}
+
+// ============================================================================
+// ORGANIZATION & STUDENT MANAGEMENT
+// ============================================================================
+
+model OrgStudentUser {
+  id         Int      @id @default(autoincrement())
+  orgUserId  Int      @map("org_user_id")
+  stuUserId  Int      @map("stu_user_id")
+  orgGroupId Int?     @map("org_group_id") // Deprecated, use OrgStudentGroup instead
+
+  dateCreated  DateTime @default(now()) @map("date_created")
+  lastModified DateTime @default(now()) @updatedAt @map("last_modified")
+
+  organization User @relation("OrgManagesStudents", fields: [orgUserId], references: [id], onDelete: Cascade)
+  student      User @relation("StudentLinkedToOrg", fields: [stuUserId], references: [id], onDelete: Cascade)
+
+  @@index([orgUserId])
+  @@index([stuUserId])
+  @@map("org_stu_users")
+}
+
+model OrgGroup {
+  id         Int     @id @default(autoincrement())
+  orgUserId  Int     @map("org_user_id")
+  name       String  @db.VarChar(255)
+  colour     String? @db.VarChar(16)
+  sortOrder  Int?    @map("sort_order")
+
+  dateCreated  DateTime @default(now()) @map("date_created")
+  lastModified DateTime @default(now()) @updatedAt @map("last_modified")
+
+  organization     User              @relation(fields: [orgUserId], references: [id], onDelete: Cascade)
+  studentMemberships OrgStudentGroup[]
+
+  @@index([orgUserId])
+  @@map("org_groups")
+}
+
+model OrgStudentGroup {
+  id         Int @id @default(autoincrement())
+  orgGroupId Int @map("org_group_id")
+  stuUserId  Int @map("stu_user_id")
+
+  dateCreated  DateTime @default(now()) @map("date_created")
+  lastModified DateTime @default(now()) @updatedAt @map("last_modified")
+
+  group   OrgGroup @relation(fields: [orgGroupId], references: [id], onDelete: Cascade)
+  student User     @relation(fields: [stuUserId], references: [id], onDelete: Cascade)
+
+  @@index([orgGroupId])
+  @@index([stuUserId])
+  @@map("org_stu_groups")
+}
+
+// ============================================================================
+// QUESTIONS & CONTENT
+// ============================================================================
+
+model StudyArea {
+  id          Int     @id @default(autoincrement())
+  position    Int?
+  name        String  @db.VarChar(255)
+  description String? @db.Text
+  slug        String? @db.VarChar(255)
+
+  dateCreated  DateTime @default(now()) @map("date_created")
+  lastModified DateTime @default(now()) @updatedAt @map("last_modified")
+
+  questions Question[]
+
+  @@map("study_areas")
+}
+
+model Question {
+  id           Int          @id @default(autoincrement())
+  extractId    Int?         @map("extract_id")
+  studyAreaId  Int          @map("study_area_id")
+  difficulty   Int          @default(1) // 1-5
+  marks        Int          @default(1)
+  type         QuestionType @default(TMCQ)
+
+  // Custom image (S3)
+  customImgFilename String? @map("custom_img_filename") @db.VarChar(255) // LEGACY
+  customImgS3Url    String? @map("custom_img_s3_url") @db.VarChar(500)
+  customImgS3Key    String? @map("custom_img_s3_key") @db.VarChar(500)
+  customImgTitle    String? @map("custom_img_title") @db.VarChar(255)
+
+  // MCQ options (text)
+  mcqOption1Text String? @map("mcq_option_1_text") @db.VarChar(255)
+  mcqOption2Text String? @map("mcq_option_2_text") @db.VarChar(255)
+  mcqOption3Text String? @map("mcq_option_3_text") @db.VarChar(255)
+  mcqOption4Text String? @map("mcq_option_4_text") @db.VarChar(255)
+  mcqOption5Text String? @map("mcq_option_5_text") @db.VarChar(255)
+
+  // MCQ options (images - LEGACY)
+  mcqOption1Img   String? @map("mcq_option_1_img") @db.VarChar(255)
+  mcqOption2Img   String? @map("mcq_option_2_img") @db.VarChar(255)
+  mcqOption3Img   String? @map("mcq_option_3_img") @db.VarChar(255)
+  mcqOption4Img   String? @map("mcq_option_4_img") @db.VarChar(255)
+  mcqOption5Img   String? @map("mcq_option_5_img") @db.VarChar(255)
+  mcqOption1ImgId Int     @default(-1) @map("mcq_option_1_img_id")
+  mcqOption2ImgId Int     @default(-1) @map("mcq_option_2_img_id")
+  mcqOption3ImgId Int     @default(-1) @map("mcq_option_3_img_id")
+  mcqOption4ImgId Int     @default(-1) @map("mcq_option_4_img_id")
+  mcqOption5ImgId Int     @default(-1) @map("mcq_option_5_img_id")
+
+  // MCQ options (images - S3 URLs)
+  mcqOption1S3Url String? @map("mcq_option_1_s3_url") @db.VarChar(500)
+  mcqOption2S3Url String? @map("mcq_option_2_s3_url") @db.VarChar(500)
+  mcqOption3S3Url String? @map("mcq_option_3_s3_url") @db.VarChar(500)
+  mcqOption4S3Url String? @map("mcq_option_4_s3_url") @db.VarChar(500)
+  mcqOption5S3Url String? @map("mcq_option_5_s3_url") @db.VarChar(500)
+
+  mcqCorrectAnswer Int? @map("mcq_correct_answer") // 1-5
+
+  // DDI (Drag-Drop Interface)
+  ddi1Label         String? @map("ddi_1_label") @db.VarChar(255)
+  ddi1CorrectAnswer String? @map("ddi_1_correct_answer") @db.VarChar(255)
+  ddi2Label         String? @map("ddi_2_label") @db.VarChar(255)
+  ddi2CorrectAnswer String? @map("ddi_2_correct_answer") @db.VarChar(255)
+
+  // Content
+  questionText String? @map("question_text") @db.Text
+  studyNotes   String? @map("study_notes") @db.Text
+
+  // Authorship
+  createdBy      Int @map("created_by")
+  lastModifiedBy Int @map("last_modified_by")
+
+  dateCreated  DateTime @default(now()) @map("date_created")
+  lastModified DateTime @default(now()) @updatedAt @map("last_modified")
+
+  // Relations
+  studyArea     StudyArea       @relation(fields: [studyAreaId], references: [id])
+  extract       Extract?        @relation(fields: [extractId], references: [id])
+  creator       User            @relation("QuestionCreator", fields: [createdBy], references: [id])
+  modifier      User            @relation("QuestionModifier", fields: [lastModifiedBy], references: [id])
+  ddiOptions    DdiOption[]
+  userQuestions UserQuestion[]
+
+  @@index([studyAreaId])
+  @@index([difficulty])
+  @@index([type])
+  @@index([extractId])
+  @@map("questions")
+}
+
+model DdiOption {
+  id         Int    @id @default(autoincrement())
+  questionId Int    @map("question_id")
+  list       String @db.VarChar(1) // '1' or '2'
+  value      String @db.VarChar(255)
+
+  dateCreated  DateTime @default(now()) @map("date_created")
+  lastModified DateTime @default(now()) @updatedAt @map("last_modified")
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+  @@map("ddi_options")
+}
+
+model InlineImage {
+  id       Int     @id @default(autoincrement())
+  filename String  @db.VarChar(255) // LEGACY
+  s3Url    String? @db.VarChar(500) // NEW: Full S3 URL
+  s3Key    String? @db.VarChar(500) // NEW: S3 key
+  title    String? @db.VarChar(255)
+  category String? @db.VarChar(255)
+
+  dateCreated  DateTime @default(now()) @map("date_created")
+  lastModified DateTime @default(now()) @updatedAt @map("last_modified")
+
+  @@index([category])
+  @@map("inline_images")
+}
+
+model Extract {
+  id             Int     @id @default(autoincrement())
+  filename       String  @db.VarChar(255) // LEGACY: Flash SWF filename
+  audioS3Url     String? @map("audio_s3_url") @db.VarChar(500) // NEW: S3 URL for MP3
+  audioS3Key     String? @map("audio_s3_key") @db.VarChar(500) // NEW: S3 key
+  title          String? @db.VarChar(255)
+  composer       String? @db.VarChar(255)
+  durationSeconds Int?   @map("duration_seconds") // NEW: Audio duration
+
+  dateCreated  DateTime @default(now()) @map("date_created")
+  lastModified DateTime @default(now()) @updatedAt @map("last_modified")
+
+  questions Question[]
+
+  @@map("extracts")
+}
+
+model MusicalTerm {
+  id           Int     @id @default(autoincrement())
+  grade        Int?
+  term         String? @db.VarChar(255)
+  alternatives String? @db.VarChar(255)
+  meaning      String? @db.Text
+  language     String? @db.VarChar(255)
+  notes        String? @db.Text
+
+  dateCreated  DateTime @default(now()) @map("date_created")
+  lastModified DateTime @default(now()) @updatedAt @map("last_modified")
+
+  @@index([grade])
+  @@map("musical_terms")
+}
+
+// ============================================================================
+// TESTS & ASSIGNMENTS
+// ============================================================================
+
+model Test {
+  id           Int     @id @default(autoincrement())
+  userId       Int     @map("user_id")
+  assignmentId Int?    @map("assignment_id")
+  type         String? @db.VarChar(64) // 'custom', 'assignment', 'preview'
+
+  includePreviousCorrect   Boolean @default(false) @map("include_previous_correct")
+  includePreviousIncorrect Boolean @default(false) @map("include_previous_incorrect")
+
+  topics        String? @db.VarChar(255) // Comma-delimited study_area_ids
+  numQuestions  Int?    @map("num_questions")
+  difficulty    String? @db.VarChar(16) // 'easy', 'intermediate', 'hard', 'all'
+  minDifficulty Int?    @map("min_difficulty")
+  maxDifficulty Int?    @map("max_difficulty")
+  difficulties  String? @db.VarChar(45) // Pipe-delimited: "1|2|3"
+
+  timeLimitRequested Boolean @default(false) @map("time_limit_requested")
+  timeLimit          Int?    @map("time_limit") // seconds
+
+  questions       String? @db.Text // Comma-delimited question IDs
+  answers         String? @db.Text // Comma-delimited answers
+  currentQuestion Int     @default(0) @map("current_question")
+
+  startTime DateTime? @map("start_time")
+  endTime   DateTime? @map("end_time")
+
+  complete        Boolean @default(false)
+  marks           Int?
+  marksAvailable  Int?    @map("marks_available")
+  progress        Int     @default(0)
+
+  dateCreated  DateTime @default(now()) @map("date_created")
+  lastModified DateTime @default(now()) @updatedAt @map("last_modified")
+
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignment      Assignment?       @relation(fields: [assignmentId], references: [id])
+  userQuestions   UserQuestion[]
+  usersAssignments UserAssignment[]
+
+  @@index([userId])
+  @@index([assignmentId])
+  @@index([complete])
+  @@map("tests")
+}
+
+model UserQuestion {
+  id             Int     @id @default(autoincrement())
+  testId         Int?    @map("test_id") // NULL for practice mode, set for tests
+  userId         Int     @map("user_id")
+  questionId     Int     @map("question_id")
+  selectedAnswer Int?    @map("selected_answer") // The answer they chose (1-5 for MCQ)
+  correct        Boolean
+
+  // Cached question metadata for easier querying
+  grade  Int?
+  topic1 String? @db.VarChar(255)
+  topic2 String? @db.VarChar(255)
+  type   QuestionType?
+
+  dateCreated  DateTime @default(now()) @map("date_created")
+  lastModified DateTime @default(now()) @updatedAt @map("last_modified")
+
+  test     Test?    @relation(fields: [testId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id])
+
+  @@index([userId])
+  @@index([questionId])
+  @@index([testId])
+  @@index([correct])
+  @@index([grade])
+  @@index([topic1])
+  @@map("users_questions")
+}
+
+model Assignment {
+  id        Int     @id @default(autoincrement())
+  savename  String? @db.VarChar(255)
+  questions String? @db.VarChar(255) // Number or comma-delimited IDs
+  topics    String? @db.VarChar(255) // Comma-delimited study_area_ids
+
+  minDifficulty Int?    @map("min_difficulty")
+  maxDifficulty Int?    @map("max_difficulty")
+  difficulties  String? @db.VarChar(45)
+
+  timeLimitRequested Boolean @default(false) @map("time_limit_requested")
+  reuseOldQuestions  Boolean @default(false) @map("reuse_old_questions")
+
+  type       String  @default("internal") @db.VarChar(20) // 'internal' or 'user-defined'
+  userId     Int     @map("user_id") // Creator
+  studyGuide String? @map("study_guide") @db.VarChar(255)
+
+  deadline     DateTime? @db.Timestamp
+  archived     Boolean   @default(false)
+  archivedDate DateTime? @map("archived_date")
+
+  dateCreated  DateTime @default(now()) @map("date_created")
+  lastModified DateTime @default(now()) @updatedAt @map("last_modified")
+
+  creator          User              @relation(fields: [userId], references: [id])
+  tests            Test[]
+  usersAssignments UserAssignment[]
+
+  @@index([userId])
+  @@index([archived])
+  @@map("assignments")
+}
+
+model UserAssignment {
+  id           Int      @id @default(autoincrement())
+  assignmentId Int      @map("assignment_id")
+  userId       Int      @map("user_id")
+  complete     Boolean  @default(false)
+  testId       Int?     @map("test_id")
+  deadline     DateTime? @db.Timestamp
+  dateCompleted DateTime? @map("date_completed")
+
+  dateCreated  DateTime @default(now()) @map("date_created")
+  lastModified DateTime @default(now()) @updatedAt @map("last_modified")
+
+  assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  test       Test?      @relation(fields: [testId], references: [id])
+
+  @@index([assignmentId])
+  @@index([userId])
+  @@index([complete])
+  @@map("users_assignments")
+}
+
+model ProgressData {
+  id            Int  @id @default(autoincrement())
+  userId        Int  @map("user_id")
+  progressTotal Int  @default(0) @map("progress_total")
+  progress1     Int  @default(0) @map("progress_1")
+  progress2     Int  @default(0) @map("progress_2")
+  progress3     Int  @default(0) @map("progress_3")
+  progress4     Int  @default(0) @map("progress_4")
+  progress5     Int  @default(0) @map("progress_5")
+  progress6     Int  @default(0) @map("progress_6")
+  progress7     Int  @default(0) @map("progress_7")
+  dateCreated   DateTime @map("date_created") @db.Date
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([dateCreated])
+  @@map("progress_data")
+}
+
+// ============================================================================
+// COMMERCE & BILLING
+// ============================================================================
+
+model Product {
+  id          Int     @id @default(autoincrement())
+  groupId     Int?    @default(0) @map("group_id")
+  name        String? @db.VarChar(255)
+  description String? @db.Text
+  price       Float   @default(0) @db.DoublePrecision
+  priceEur    Float   @default(0) @map("price_eur") @db.DoublePrecision
+  priceUsd    Float   @default(0) @map("price_usd") @db.DoublePrecision
+  period      Int     @default(0) // Duration in days (0 for recurring)
+
+  dateCreated  DateTime @default(now()) @map("date_created")
+  lastModified DateTime @default(now()) @updatedAt @map("last_modified")
+
+  cartItems        CartItem[]
+  transactionItems TransactionItem[]
+
+  @@map("products")
+}
+
+model CartItem {
+  id        Int      @id @default(autoincrement())
+  productId Int      @map("product_id")
+  voucherId Int?     @default(0) @map("voucher_id")
+  price     Float?   @db.DoublePrecision
+  currency  Currency @default(GBP)
+  quantity  Int      @default(0)
+  userId    Int      @map("user_id")
+
+  dateCreated  DateTime @default(now()) @map("date_created")
+  lastModified DateTime @default(now()) @updatedAt @map("last_modified")
+
+  product Product @relation(fields: [productId], references: [id])
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  voucher Voucher? @relation(fields: [voucherId], references: [id])
+
+  @@index([userId])
+  @@index([productId])
+  @@map("cartitems")
+}
+
+model Transaction {
+  id                 Int       @id @default(autoincrement())
+  userId             Int?      @map("user_id")
+  paypalTransactionId String?  @map("paypal_transaction_id") @db.VarChar(255) // LEGACY
+  paypalPaymentStatus String?  @map("paypal_payment_status") @db.VarChar(255) // LEGACY
+  stripePaymentIntentId String? @map("stripe_payment_intent_id") @db.VarChar(255) // NEW
+  stripeInvoiceId     String?  @map("stripe_invoice_id") @db.VarChar(255) // NEW
+  total              Float?    @db.DoublePrecision
+  currency           Currency  @default(GBP)
+  transactionDate    DateTime? @map("transaction_date")
+  notes              String?   @db.Text
+
+  dateCreated  DateTime @default(now()) @map("date_created")
+  lastModified DateTime @default(now()) @updatedAt @map("last_modified")
+
+  user             User?             @relation(fields: [userId], references: [id])
+  transactionItems TransactionItem[]
+  voucherUsages    VoucherUsage[]
+
+  @@index([userId])
+  @@index([stripePaymentIntentId])
+  @@map("transactions")
+}
+
+model TransactionItem {
+  id            Int      @id @default(autoincrement())
+  transactionId Int      @map("transaction_id")
+  productId     Int      @map("product_id")
+  userId        Int      @map("user_id")
+  price         Float?   @db.DoublePrecision
+  currency      Currency @default(GBP)
+  quantity      Int      @default(0)
+  startDate     DateTime? @map("start_date") @db.Date
+  endDate       DateTime? @map("end_date") @db.Date
+
+  dateCreated  DateTime @default(now()) @map("date_created")
+  lastModified DateTime @default(now()) @updatedAt @map("last_modified")
+
+  transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  product     Product     @relation(fields: [productId], references: [id])
+  user        User        @relation(fields: [userId], references: [id])
+
+  @@index([transactionId])
+  @@index([userId])
+  @@map("transaction_items")
+}
+
+model Voucher {
+  id                Int           @id @default(autoincrement())
+  userId            Int?          @map("user_id")
+  code              String?       @db.VarChar(255)
+  expiry            DateTime?     @db.Date
+  status            VoucherStatus @default(inactive)
+  maxUsage          Int           @default(0) @map("max_usage")
+  discountPercent   Int           @default(0) @map("discount_percent")
+  commissionPercent Int           @default(0) @map("commission_percent")
+
+  dateCreated  DateTime @default(now()) @map("date_created")
+  lastModified DateTime @default(now()) @updatedAt @map("last_modified")
+
+  user              User?                @relation(fields: [userId], references: [id])
+  cartItems         CartItem[]
+  voucherUsages     VoucherUsage[]
+  voucherApplications VoucherApplication[]
+  voucherInvitations VoucherInvitation[]
+
+  @@index([code])
+  @@index([status])
+  @@map("vouchers")
+}
+
+model VoucherUsage {
+  id            Int      @id @default(autoincrement())
+  userId        Int?     @map("user_id")
+  voucherId     Int?     @map("voucher_id")
+  transactionId Int?     @map("transaction_id")
+  dateUsed      DateTime? @map("date_used")
+  referralDue   Float    @default(0) @map("referral_due") @db.DoublePrecision
+  referralPaid  Boolean  @default(false) @map("referral_paid")
+
+  user        User?        @relation(fields: [userId], references: [id])
+  voucher     Voucher?     @relation(fields: [voucherId], references: [id])
+  transaction Transaction? @relation(fields: [transactionId], references: [id])
+
+  @@index([userId])
+  @@index([voucherId])
+  @@map("voucher_usage")
+}
+
+model VoucherApplication {
+  id                     Int       @id @default(autoincrement())
+  userId                 Int?      @map("user_id")
+  voucherId              Int?      @default(0) @map("voucher_id")
+  granted                Boolean   @default(false)
+  dateGranted            DateTime? @map("date_granted")
+  preferReward           Boolean   @default(false) @map("prefer_reward")
+  teach                  Boolean   @default(false)
+  studentsPerYear        String?   @map("students_per_year") @db.VarChar(255)
+  instrumentsTaught      String?   @map("instruments_taught") @db.Text
+  teachInSchool          Boolean   @default(false) @map("teach_in_school")
+  teachInPrivate         Boolean   @default(false) @map("teach_in_private")
+  teachTheory            Boolean   @default(false) @map("teach_theory")
+  teachOneToOne          Boolean   @default(false) @map("teach_one_to_one")
+  teachInClasses         Boolean   @default(false) @map("teach_in_classes")
+  numYearsTeachingMusic  Int?      @default(0) @map("num_years_teaching_music")
+
+  dateCreated  DateTime @default(now()) @map("date_created")
+  lastModified DateTime @default(now()) @updatedAt @map("last_modified")
+
+  user    User?    @relation(fields: [userId], references: [id])
+  voucher Voucher? @relation(fields: [voucherId], references: [id])
+
+  @@index([userId])
+  @@map("voucher_applications")
+}
+
+model VoucherInvitation {
+  id              Int      @id @default(autoincrement())
+  userId          Int?     @map("user_id")
+  emailSent       Boolean  @default(false) @map("email_sent")
+  voucherId       Int?     @default(0) @map("voucher_id")
+  studentName     String?  @map("student_name") @db.VarChar(255)
+  studentEmail    String?  @map("student_email") @db.VarChar(255)
+  personalMessage String?  @map("personal_message") @db.Text
+
+  dateCreated  DateTime @default(now()) @map("date_created")
+  lastModified DateTime @default(now()) @updatedAt @map("last_modified")
+
+  user    User?    @relation(fields: [userId], references: [id])
+  voucher Voucher? @relation(fields: [voucherId], references: [id])
+
+  @@index([userId])
+  @@map("voucher_invitations")
+}
+
+// ============================================================================
+// SUPPORTING TABLES (Email, Logs, etc.)
+// ============================================================================
+
+model Email {
+  id          Int      @id @default(autoincrement())
+  userIdTo    Int?     @map("user_id_to")
+  addressTo   String?  @db.VarChar(255)
+  addressFrom String?  @db.VarChar(255)
+  subject     String?  @db.VarChar(255)
+  bodyText    String?  @map("body_text") @db.Text
+  bodyHtml    String?  @map("body_html") @db.Text
+  seen        Boolean  @default(false)
+  notes       String?  @db.Text
+  sendResult  Boolean  @default(false) @map("send_result")
+  sendError   String?  @map("send_error") @db.VarChar(255)
+
+  dateCreated  DateTime @default(now()) @map("date_created")
+  lastModified DateTime @default(now()) @updatedAt @map("last_modified")
+
+  @@index([userIdTo])
+  @@map("emails")
+}
+
+model Logger {
+  id        Int      @id @default(autoincrement())
+  userId    Int?     @default(0) @map("user_id")
+  eventType String?  @map("event_type") @db.VarChar(255)
+  eventCode Int?     @map("event_code")
+  eventData String?  @map("event_data") @db.VarChar(255)
+
+  dateCreated  DateTime @default(now()) @map("date_created")
+  lastModified DateTime @default(now()) @updatedAt @map("last_modified")
+
+  @@index([userId])
+  @@index([eventType])
+  @@map("logger")
+}
+
+// Note: Blog, tips, mailshot tables omitted for brevity
+// These can be added if needed or migrated to Contentful
