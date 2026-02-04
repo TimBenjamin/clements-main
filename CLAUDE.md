@@ -3,7 +3,7 @@
 ## Stack
 
 - **Framework**: Next.js (App Router) deployed on Vercel
-- **Styling**: Use the provided Pico CSS framework. See https://picocss.com/docs for documentation. Create new classes only as necessary and emphasis reusability and maintainability.
+- **Styling**: Use the provided Pico CSS framework. See https://picocss.com/docs for documentation. 
 - **Database**: We need to migrate an existing MySQL on RDS database to Neon (serverless Postgres).
 - **ORM**: Prisma
 - **Auth**: To be selected. The previous site had hand-rolled auth; the new site 
@@ -35,3 +35,10 @@
 - Collocate related files (component + its types + its tests in the same directory).
 - Keep components small. Extract logic into hooks or utility functions.
 - Use early returns to reduce nesting.
+
+## User Interface and User Experience
+
+- The website must cater well (responsively) to mobile and tablet users (as well as desktop), with modern accessibility standards
+- Reproduce the old UI / design as far as possible in Pico, but don't over-complicate by trying to replicate it exactly.
+- Create new CSS classes only as necessary and emphasise reusability and maintainability.
+- One big but well-organised CSS file (making use of variables) is preferable to modules.
