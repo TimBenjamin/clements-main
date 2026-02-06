@@ -46,10 +46,10 @@ export default async function DashboardPage() {
               <Link href="/practice">Practice Questions</Link>
             </li>
             <li>
-              <Link href="/tests/new">Take a Test</Link>
+              <Link href="/assignments">My Assignments</Link>
             </li>
             <li>
-              <Link href="/assignments">My Assignments</Link>
+              <Link href="/study">Study Guides</Link>
             </li>
             <li>
               <Link href="/progress">My Progress</Link>

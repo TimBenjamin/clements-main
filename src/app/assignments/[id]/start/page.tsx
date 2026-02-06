@@ -30,15 +30,28 @@ export default async function StartAssignmentPage({
     notFound();
   }
 
-  // If test already exists, redirect to it
-  if (userAssignment.test) {
-    redirect(`/tests/${userAssignment.test.id}`);
+  // If test already exists and incomplete, set it in session and redirect
+  if (userAssignment.test && !userAssignment.test.complete) {
+    const { getPracticeSession } = await import("@/lib/practice-session");
+    const session = await getPracticeSession();
+    session.testId = userAssignment.test.id;
+    await session.save();
+    redirect("/practice");
+  }
+
+  // If test is complete, show results
+  if (userAssignment.test && userAssignment.test.complete) {
+    redirect(`/practice/results?tid=${userAssignment.test.id}`);
   }
 
   // Create test and redirect
   try {
     const testId = await startAssignment(userAssignmentId);
-    redirect(`/tests/${testId}`);
+    const { getPracticeSession } = await import("@/lib/practice-session");
+    const session = await getPracticeSession();
+    session.testId = testId;
+    await session.save();
+    redirect("/practice");
   } catch (error) {
     console.error("Error starting assignment:", error);
     redirect("/assignments?error=start_failed");

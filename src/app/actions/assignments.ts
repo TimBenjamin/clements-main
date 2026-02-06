@@ -176,3 +176,69 @@ export async function startAssignment(
 
   return test.id;
 }
+
+/**
+ * Start an internal assignment (from study guide)
+ */
+export async function startInternalAssignment(formData: FormData): Promise<void> {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const assignmentId = parseInt(formData.get("assignmentId") as string);
+
+  if (isNaN(assignmentId)) {
+    throw new Error("Invalid assignment ID");
+  }
+
+  // Get assignment
+  const assignment = await prisma.assignment.findUnique({
+    where: { id: assignmentId },
+  });
+
+  if (!assignment || assignment.type !== "internal") {
+    throw new Error("Assignment not found or not accessible");
+  }
+
+  // Parse questions from comma-delimited string
+  const questionIds = assignment.questions
+    ?.split(",")
+    .map((id) => parseInt(id.trim()))
+    .filter((id) => !isNaN(id)) || [];
+
+  if (questionIds.length === 0) {
+    throw new Error("No questions defined for this assignment");
+  }
+
+  // Create test with predefined questions
+  const test = await prisma.test.create({
+    data: {
+      userId: user.id,
+      assignmentId: assignment.id,
+      type: "assignment",
+      topics: assignment.topics,
+      numQuestions: questionIds.length,
+      timeLimitRequested: assignment.timeLimitRequested,
+      timeLimit: assignment.timeLimitRequested ? questionIds.length * 90 : 0,
+      questions: questionIds.join(","),
+      answers: "",
+      currentQuestion: 0,
+      startTime: new Date(),
+      complete: false,
+      progress: 0,
+      marks: 0,
+      marksAvailable: questionIds.length,
+    },
+  });
+
+  // Store test ID in session
+  const { getPracticeSession } = await import("@/lib/practice-session");
+  const session = await getPracticeSession();
+  session.testId = test.id;
+  await session.save();
+
+  // Redirect to practice
+  redirect("/practice");
+}

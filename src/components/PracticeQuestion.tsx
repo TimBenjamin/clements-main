@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { submitAnswer } from "@/app/actions/practice";
 import type { UserQuestion } from "@prisma/client";
 import type { QuestionWithRelations } from "@/types/practice";
+import { QuestionText } from "./QuestionText";
 
 type QuestionWithDdiOptions = QuestionWithRelations;
 
@@ -140,6 +141,19 @@ export function PracticeQuestion({
     );
   }
 
+  // For GMCQ with no options (images not yet migrated to S3)
+  if (question.type === "GMCQ" && mcqOptions.length === 0) {
+    return (
+      <div role="alert">
+        <p>
+          This graphical question requires images that haven't been migrated to S3 yet.
+        </p>
+        <p><small>Question ID: {question.id}</small></p>
+        <button onClick={handleNextQuestion}>Skip to Next Question</button>
+      </div>
+    );
+  }
+
   return (
     <div>
       <section>
@@ -148,9 +162,7 @@ export function PracticeQuestion({
         {/* Question text */}
         {question.questionText && (
           <div style={{ marginBottom: "1rem" }}>
-            <p style={{ fontSize: "1.1rem", fontWeight: 500 }}>
-              {question.questionText}
-            </p>
+            <QuestionText text={question.questionText} />
           </div>
         )}
 
@@ -264,6 +276,9 @@ export function PracticeQuestion({
         <details>
           <summary>Question Details</summary>
           <dl>
+            <dt>Question ID</dt>
+            <dd>{question.id}</dd>
+
             <dt>Type</dt>
             <dd>{question.type}</dd>
 

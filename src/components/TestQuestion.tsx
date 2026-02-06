@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { submitTestAnswer } from "@/app/actions/tests";
 import type { QuestionWithRelations } from "@/types/practice";
+import { QuestionText } from "./QuestionText";
 
 interface TestQuestionProps {
   question: QuestionWithRelations & {
@@ -126,17 +127,35 @@ export function TestQuestion({
     );
   }
 
+  // For GMCQ with no options (images not yet migrated to S3)
+  if (question.type === "GMCQ" && mcqOptions.length === 0) {
+    return (
+      <div role="alert">
+        <p>
+          This graphical question requires images that haven't been migrated to S3 yet.
+        </p>
+        <p><small>Question ID: {question.id}</small></p>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            window.location.href = `/tests/${testId}?q=${questionIndex + 1}`;
+          }}
+        >
+          <button type="submit">Skip Question</button>
+        </form>
+      </div>
+    );
+  }
+
   return (
     <div>
       <section>
-        <h2>Question {questionIndex + 1}</h2>
+        <h2>Question {questionIndex + 1} of {totalQuestions}</h2>
 
         {/* Question text */}
         {question.questionText && (
           <div style={{ marginBottom: "1rem" }}>
-            <p style={{ fontSize: "1.1rem", fontWeight: 500 }}>
-              {question.questionText}
-            </p>
+            <QuestionText text={question.questionText} />
           </div>
         )}
 
