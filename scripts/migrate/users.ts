@@ -44,153 +44,87 @@ async function migrateUsers(incrementalSince?: Date) {
     let migrated = 0;
     let errors = 0;
 
+    // Track displaynames to ensure uniqueness
+    const usedDisplaynames = new Set<string>();
+
     for (const u of users) {
       try {
         // Generate random password and hash it
         const randomPassword = generateRandomPassword();
         const hashedPassword = await bcrypt.hash(randomPassword, 10);
 
+        // Generate displayname if missing - must be unique
+        let displayname = u.displayname;
+        if (!displayname || displayname.trim() === '') {
+          // Try using name first
+          displayname = u.name || u.email || u.username || `user_${u.id}`;
+
+          // If displayname is already used, try variations
+          if (usedDisplaynames.has(displayname)) {
+            // Try email
+            displayname = u.email || u.username || `user_${u.id}`;
+
+            // If still duplicate, use username
+            if (usedDisplaynames.has(displayname)) {
+              displayname = u.username || `user_${u.id}`;
+
+              // Last resort: use user_ID
+              if (usedDisplaynames.has(displayname)) {
+                displayname = `user_${u.id}`;
+              }
+            }
+          }
+        }
+
+        usedDisplaynames.add(displayname);
+
         // Convert MySQL boolean (0/1) to PostgreSQL boolean
         const toBool = (val: any) => val === 1 || val === true;
 
-        // Handle zero dates from MySQL
+        // Convert NULL integers to 0
+        const toInt = (val: any) => (val === null || val === undefined) ? 0 : val;
+
+        // Handle zero dates and invalid dates from MySQL
         const parseDate = (date: any) => {
-          if (!date || date === "0000-00-00 00:00:00") return null;
-          return date;
+          if (!date || date === "0000-00-00 00:00:00" || date === "0000-00-00") return null;
+          const parsed = new Date(date);
+          // Return null if date is invalid
+          if (isNaN(parsed.getTime())) return null;
+          return parsed;
         };
 
-        await prisma.user.upsert({
-          where: { id: u.id },
-          update: {
-            type: u.type,
-            name: u.name,
-            displayname: u.displayname,
-            phone: u.phone,
-            mobile: u.mobile,
-            email: u.email,
-            address: u.address,
-            postcode: u.postcode,
-            country: u.country,
-
-            username: u.username,
-            password: hashedPassword, // Random password - user must reset
-            resetToken: null,
-            resetExpiry: null,
-            examDate: parseDate(u.exam_date),
-
-            lastAction: parseDate(u.last_action) || new Date(),
-            sessionId: u.session_id,
-
-            licenses: u.licenses,
-            studentFundingCode: u.student_funding_code,
-
-            expiry: parseDate(u.expiry),
-            // stripeCustomerId will be null (no Stripe in old system)
-            // stripeSubscriptionId will be null
-
-            siteAdmin: toBool(u.site_admin),
-            forumAdmin: toBool(u.forum_admin),
-            questionAdmin: toBool(u.question_admin),
-            blogAdmin: toBool(u.blog_admin),
-
-            welcomeEmailSent: toBool(u.welcome_email_sent),
-            initialCheckoutComplete: toBool(u.initial_checkout_complete),
-            showWelcomeBox: toBool(u.show_welcome_box),
-            showSubscriptionRenewalBox: toBool(u.show_subscription_renewal_box),
-
-            whereDidYouHear: u.where_did_you_hear,
-            whereDidYouHearOther: u.where_did_you_hear_other,
-
-            progressTotal: u.progress_total,
-            progress1: u.progress_1,
-            progress2: u.progress_2,
-            progress3: u.progress_3,
-            progress4: u.progress_4,
-            progress5: u.progress_5,
-            progress6: u.progress_6,
-            progress7: u.progress_7,
-
-            questionsTotal: u.questions_total,
-            questionsCorrect: u.questions_correct,
-            questionsIncorrect: u.questions_incorrect,
-            testsCount: u.tests_count,
-            successfulLogins: u.successful_logins,
-
-            allowOverdueAssignments: toBool(u.allow_overdue_assignments),
-            allowOverdueAssignmentsPeriodDays: u.allow_overdue_assignments_period_days,
-            suppressTeacherAssignmentEmails: toBool(u.suppress_teacher_assignment_emails),
-            suppressStudentAssignmentEmails: toBool(u.suppress_student_assignment_emails),
-            suppressStudentWelcomeEmails: toBool(u.suppress_student_welcome_emails),
-            expiredAssignmentsStudentVisibilityDurationDays: u.expired_assignments_student_visibility_duration_days,
-            completeAssignmentsStudentVisibilityDurationDays: u.complete_assignments_student_visibility_duration_days,
-
-            dateCreated: u.date_created,
-            lastModified: u.last_modified,
-          },
-          create: {
-            id: u.id,
-            type: u.type,
-            name: u.name,
-            displayname: u.displayname,
-            phone: u.phone,
-            mobile: u.mobile,
-            email: u.email,
-            address: u.address,
-            postcode: u.postcode,
-            country: u.country,
-
-            username: u.username,
-            password: hashedPassword,
-            examDate: parseDate(u.exam_date),
-
-            lastAction: parseDate(u.last_action) || new Date(),
-            sessionId: u.session_id,
-
-            licenses: u.licenses,
-            studentFundingCode: u.student_funding_code,
-
-            expiry: parseDate(u.expiry),
-
-            siteAdmin: toBool(u.site_admin),
-            forumAdmin: toBool(u.forum_admin),
-            questionAdmin: toBool(u.question_admin),
-            blogAdmin: toBool(u.blog_admin),
-
-            welcomeEmailSent: toBool(u.welcome_email_sent),
-            initialCheckoutComplete: toBool(u.initial_checkout_complete),
-            showWelcomeBox: toBool(u.show_welcome_box),
-            showSubscriptionRenewalBox: toBool(u.show_subscription_renewal_box),
-
-            whereDidYouHear: u.where_did_you_hear,
-            whereDidYouHearOther: u.where_did_you_hear_other,
-
-            progressTotal: u.progress_total,
-            progress1: u.progress_1,
-            progress2: u.progress_2,
-            progress3: u.progress_3,
-            progress4: u.progress_4,
-            progress5: u.progress_5,
-            progress6: u.progress_6,
-            progress7: u.progress_7,
-
-            questionsTotal: u.questions_total,
-            questionsCorrect: u.questions_correct,
-            questionsIncorrect: u.questions_incorrect,
-            testsCount: u.tests_count,
-            successfulLogins: u.successful_logins,
-
-            allowOverdueAssignments: toBool(u.allow_overdue_assignments),
-            allowOverdueAssignmentsPeriodDays: u.allow_overdue_assignments_period_days,
-            suppressTeacherAssignmentEmails: toBool(u.suppress_teacher_assignment_emails),
-            suppressStudentAssignmentEmails: toBool(u.suppress_student_assignment_emails),
-            suppressStudentWelcomeEmails: toBool(u.suppress_student_welcome_emails),
-            expiredAssignmentsStudentVisibilityDurationDays: u.expired_assignments_student_visibility_duration_days,
-            completeAssignmentsStudentVisibilityDurationDays: u.complete_assignments_student_visibility_duration_days,
-
-            dateCreated: u.date_created,
-            lastModified: u.last_modified,
-          },
-        });
+        // Use raw SQL to insert with manual ID (Prisma doesn't allow this with autoincrement)
+        await prisma.$executeRaw`
+          INSERT INTO users (
+            id, type, name, displayname, phone, mobile, email, address, postcode, country,
+            username, password, reset_token, reset_expiry, exam_date,
+            last_action, session_id, licenses, student_funding_code, expiry,
+            stripe_customer_id, stripe_subscription_id,
+            site_admin, forum_admin, question_admin, blog_admin,
+            welcome_email_sent, initial_checkout_complete, show_welcome_box, show_subscription_renewal_box,
+            where_did_you_hear, where_did_you_hear_other,
+            progress_total, progress_1, progress_2, progress_3, progress_4, progress_5, progress_6, progress_7,
+            questions_total, questions_correct, questions_incorrect, tests_count, successful_logins,
+            allow_overdue_assignments, allow_overdue_assignments_period_days,
+            suppress_teacher_assignment_emails, suppress_student_assignment_emails, suppress_student_welcome_emails,
+            expired_assignments_student_visibility_duration_days, complete_assignments_student_visibility_duration_days,
+            date_created, last_modified
+          ) VALUES (
+            ${u.id}, ${u.type}::user_type, ${u.name}, ${displayname}, ${u.phone}, ${u.mobile}, ${u.email}, ${u.address}, ${u.postcode}, ${u.country},
+            ${u.username}, ${hashedPassword}, ${null}, ${null}, ${parseDate(u.exam_date)},
+            ${parseDate(u.last_action) || new Date()}, ${u.session_id}, ${toInt(u.licenses)}, ${u.student_funding_code}, ${parseDate(u.expiry)},
+            ${null}, ${null},
+            ${toBool(u.site_admin)}, ${toBool(u.forum_admin)}, ${toBool(u.question_admin)}, ${toBool(u.blog_admin)},
+            ${toBool(u.welcome_email_sent)}, ${toBool(u.initial_checkout_complete)}, ${toBool(u.show_welcome_box)}, ${toBool(u.show_subscription_renewal_box)},
+            ${u.where_did_you_hear}, ${u.where_did_you_hear_other},
+            ${toInt(u.progress_total)}, ${toInt(u.progress_1)}, ${toInt(u.progress_2)}, ${toInt(u.progress_3)}, ${toInt(u.progress_4)}, ${toInt(u.progress_5)}, ${toInt(u.progress_6)}, ${toInt(u.progress_7)},
+            ${toInt(u.questions_total)}, ${toInt(u.questions_correct)}, ${toInt(u.questions_incorrect)}, ${toInt(u.tests_count)}, ${toInt(u.successful_logins)},
+            ${toBool(u.allow_overdue_assignments)}, ${toInt(u.allow_overdue_assignments_period_days)},
+            ${toBool(u.suppress_teacher_assignment_emails)}, ${toBool(u.suppress_student_assignment_emails)}, ${toBool(u.suppress_student_welcome_emails)},
+            ${toInt(u.expired_assignments_student_visibility_duration_days)}, ${toInt(u.complete_assignments_student_visibility_duration_days)},
+            ${u.date_created}, ${u.last_modified}
+          )
+        `;
 
         migrated++;
 

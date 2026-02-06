@@ -24,119 +24,38 @@ async function migrateQuestions() {
 
     for (const q of questions) {
       try {
-        await prisma.question.upsert({
-          where: { id: q.id },
-          update: {
-            extractId: q.extract_id || null,
-            studyAreaId: q.study_area_id,
-            difficulty: q.difficulty,
-            marks: q.marks,
-            type: q.type,
+        // Normalize extract_id: -1 and 0 are sentinel values meaning "no extract"
+        const extractId =
+          q.extract_id && q.extract_id > 0 ? q.extract_id : null;
 
-            // Custom image (to be migrated to S3)
-            customImgFilename: q.custom_img_filename,
-            customImgS3Url: null, // To be populated after S3 migration
-            customImgS3Key: null,
-            customImgTitle: q.custom_img_title,
-
-            // MCQ text options
-            mcqOption1Text: q.mcq_option_1_text,
-            mcqOption2Text: q.mcq_option_2_text,
-            mcqOption3Text: q.mcq_option_3_text,
-            mcqOption4Text: q.mcq_option_4_text,
-            mcqOption5Text: q.mcq_option_5_text,
-
-            // MCQ image options (legacy)
-            mcqOption1Img: q.mcq_option_1_img,
-            mcqOption2Img: q.mcq_option_2_img,
-            mcqOption3Img: q.mcq_option_3_img,
-            mcqOption4Img: q.mcq_option_4_img,
-            mcqOption5Img: q.mcq_option_5_img,
-            mcqOption1ImgId: q.mcq_option_1_img_id,
-            mcqOption2ImgId: q.mcq_option_2_img_id,
-            mcqOption3ImgId: q.mcq_option_3_img_id,
-            mcqOption4ImgId: q.mcq_option_4_img_id,
-            mcqOption5ImgId: q.mcq_option_5_img_id,
-
-            // MCQ image options (S3 - to be populated)
-            mcqOption1S3Url: null,
-            mcqOption2S3Url: null,
-            mcqOption3S3Url: null,
-            mcqOption4S3Url: null,
-            mcqOption5S3Url: null,
-
-            mcqCorrectAnswer: q.mcq_correct_answer,
-
-            // DDI
-            ddi1Label: q.ddi_1_label,
-            ddi1CorrectAnswer: q.ddi_1_correct_answer,
-            ddi2Label: q.ddi_2_label,
-            ddi2CorrectAnswer: q.ddi_2_correct_answer,
-
-            // Content
-            questionText: q.question_text,
-            studyNotes: q.study_notes,
-
-            // Authorship
-            createdBy: q.created_by,
-            lastModifiedBy: q.last_modified_by,
-
-            dateCreated: q.date_created,
-            lastModified: q.last_modified,
-          },
-          create: {
-            id: q.id,
-            extractId: q.extract_id || null,
-            studyAreaId: q.study_area_id,
-            difficulty: q.difficulty,
-            marks: q.marks,
-            type: q.type,
-
-            customImgFilename: q.custom_img_filename,
-            customImgS3Url: null,
-            customImgS3Key: null,
-            customImgTitle: q.custom_img_title,
-
-            mcqOption1Text: q.mcq_option_1_text,
-            mcqOption2Text: q.mcq_option_2_text,
-            mcqOption3Text: q.mcq_option_3_text,
-            mcqOption4Text: q.mcq_option_4_text,
-            mcqOption5Text: q.mcq_option_5_text,
-
-            mcqOption1Img: q.mcq_option_1_img,
-            mcqOption2Img: q.mcq_option_2_img,
-            mcqOption3Img: q.mcq_option_3_img,
-            mcqOption4Img: q.mcq_option_4_img,
-            mcqOption5Img: q.mcq_option_5_img,
-            mcqOption1ImgId: q.mcq_option_1_img_id,
-            mcqOption2ImgId: q.mcq_option_2_img_id,
-            mcqOption3ImgId: q.mcq_option_3_img_id,
-            mcqOption4ImgId: q.mcq_option_4_img_id,
-            mcqOption5ImgId: q.mcq_option_5_img_id,
-
-            mcqOption1S3Url: null,
-            mcqOption2S3Url: null,
-            mcqOption3S3Url: null,
-            mcqOption4S3Url: null,
-            mcqOption5S3Url: null,
-
-            mcqCorrectAnswer: q.mcq_correct_answer,
-
-            ddi1Label: q.ddi_1_label,
-            ddi1CorrectAnswer: q.ddi_1_correct_answer,
-            ddi2Label: q.ddi_2_label,
-            ddi2CorrectAnswer: q.ddi_2_correct_answer,
-
-            questionText: q.question_text,
-            studyNotes: q.study_notes,
-
-            createdBy: q.created_by,
-            lastModifiedBy: q.last_modified_by,
-
-            dateCreated: q.date_created,
-            lastModified: q.last_modified,
-          },
-        });
+        // Use raw SQL to insert with manual ID (Prisma doesn't allow this with autoincrement)
+        await prisma.$executeRaw`
+          INSERT INTO questions (
+            id, extract_id, study_area_id, created_by, last_modified_by,
+            difficulty, marks, type,
+            custom_img_filename, custom_img_s3_url, custom_img_s3_key, custom_img_title,
+            mcq_option_1_text, mcq_option_2_text, mcq_option_3_text, mcq_option_4_text, mcq_option_5_text,
+            mcq_option_1_img, mcq_option_2_img, mcq_option_3_img, mcq_option_4_img, mcq_option_5_img,
+            mcq_option_1_img_id, mcq_option_2_img_id, mcq_option_3_img_id, mcq_option_4_img_id, mcq_option_5_img_id,
+            mcq_option_1_s3_url, mcq_option_2_s3_url, mcq_option_3_s3_url, mcq_option_4_s3_url, mcq_option_5_s3_url,
+            mcq_correct_answer,
+            ddi_1_label, ddi_1_correct_answer, ddi_2_label, ddi_2_correct_answer,
+            question_text, study_notes,
+            date_created, last_modified
+          ) VALUES (
+            ${q.id}, ${extractId}, ${q.study_area_id}, ${q.created_by}, ${q.last_modified_by},
+            ${q.difficulty}, ${q.marks}, ${q.type}::question_type,
+            ${q.custom_img_filename}, ${null}, ${null}, ${q.custom_img_title},
+            ${q.mcq_option_1_text}, ${q.mcq_option_2_text}, ${q.mcq_option_3_text}, ${q.mcq_option_4_text}, ${q.mcq_option_5_text},
+            ${q.mcq_option_1_img}, ${q.mcq_option_2_img}, ${q.mcq_option_3_img}, ${q.mcq_option_4_img}, ${q.mcq_option_5_img},
+            ${q.mcq_option_1_img_id}, ${q.mcq_option_2_img_id}, ${q.mcq_option_3_img_id}, ${q.mcq_option_4_img_id}, ${q.mcq_option_5_img_id},
+            ${null}, ${null}, ${null}, ${null}, ${null},
+            ${q.mcq_correct_answer},
+            ${q.ddi_1_label}, ${q.ddi_1_correct_answer}, ${q.ddi_2_label}, ${q.ddi_2_correct_answer},
+            ${q.question_text}, ${q.study_notes},
+            ${q.date_created}, ${q.last_modified}
+          )
+        `;
 
         migrated++;
 

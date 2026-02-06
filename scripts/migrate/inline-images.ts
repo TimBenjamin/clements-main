@@ -20,32 +20,13 @@ async function migrateInlineImages() {
 
     console.log(`Found ${images.length} inline images to migrate`);
 
-    // Insert into new database
+    // Insert into new database using raw SQL to preserve IDs
+    // Note: Using camelCase column names as they exist in DB (no @map directives in schema)
     for (const img of images) {
-      await prisma.inlineImage.upsert({
-        where: { id: img.id },
-        update: {
-          filename: img.filename, // Legacy filename
-          // s3Url and s3Key should be populated later
-          // after images are uploaded to S3
-          s3Url: null,
-          s3Key: null,
-          title: img.title,
-          category: img.category,
-          dateCreated: img.date_created,
-          lastModified: img.last_modified,
-        },
-        create: {
-          id: img.id,
-          filename: img.filename,
-          s3Url: null,
-          s3Key: null,
-          title: img.title,
-          category: img.category,
-          dateCreated: img.date_created,
-          lastModified: img.last_modified,
-        },
-      });
+      await prisma.$executeRaw`
+        INSERT INTO inline_images (id, filename, "s3Url", "s3Key", title, category, date_created, last_modified)
+        VALUES (${img.id}, ${img.filename}, ${null}, ${null}, ${img.title}, ${img.category}, ${img.date_created}, ${img.last_modified})
+      `;
     }
 
     console.log(`✓ Migrated ${images.length} inline images`);

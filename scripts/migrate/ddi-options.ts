@@ -22,24 +22,11 @@ async function migrateDdiOptions() {
 
     for (const opt of options) {
       try {
-        await prisma.ddiOption.upsert({
-          where: { id: opt.id },
-          update: {
-            questionId: opt.question_id,
-            list: opt.list,
-            value: opt.value,
-            dateCreated: opt.date_created,
-            lastModified: opt.last_modified,
-          },
-          create: {
-            id: opt.id,
-            questionId: opt.question_id,
-            list: opt.list,
-            value: opt.value,
-            dateCreated: opt.date_created,
-            lastModified: opt.last_modified,
-          },
-        });
+        // Use raw SQL to insert with manual ID (Prisma doesn't allow this with autoincrement)
+        await prisma.$executeRaw`
+          INSERT INTO ddi_options (id, question_id, list, value, date_created, last_modified)
+          VALUES (${opt.id}, ${opt.question_id}, ${opt.list}, ${opt.value}, ${opt.date_created}, ${opt.last_modified})
+        `;
 
         migrated++;
 

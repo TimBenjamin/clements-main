@@ -42,14 +42,14 @@ export async function recordMigration(
     CREATE TABLE IF NOT EXISTS migration_log (
       id SERIAL PRIMARY KEY,
       table_name VARCHAR(255) NOT NULL,
-      record_count INTEGER NOT NULL,
+      records_count INTEGER NOT NULL,
       notes TEXT,
       migrated_at TIMESTAMP NOT NULL DEFAULT NOW()
     )
   `;
 
   await prisma.$executeRaw`
-    INSERT INTO migration_log (table_name, record_count, notes)
+    INSERT INTO migration_log (table_name, records_count, notes)
     VALUES (${tableName}, ${recordCount}, ${notes || null})
   `;
 

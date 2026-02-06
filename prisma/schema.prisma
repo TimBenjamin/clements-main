@@ -780,3 +780,17 @@ model Logger {
 
 // Note: Blog, tips, mailshot tables omitted for brevity
 // These can be added if needed or migrated to Contentful
+
+// ============================================================================
+// MIGRATION TRACKING
+// ============================================================================
+
+model MigrationLog {
+  id           Int       @id @default(autoincrement())
+  tableName    String    @map("table_name") @db.VarChar(255)
+  recordsCount Int       @map("records_count")
+  notes        String?   @db.Text
+  migratedAt   DateTime  @default(now()) @map("migrated_at")
+
+  @@map("migration_log")
+}

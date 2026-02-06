@@ -17,28 +17,12 @@ async function migrateStudyAreas() {
 
     console.log(`Found ${studyAreas.length} study areas to migrate`);
 
-    // Insert into new database
+    // Insert into new database using raw SQL to preserve IDs
     for (const sa of studyAreas) {
-      await prisma.studyArea.upsert({
-        where: { id: sa.id },
-        update: {
-          position: sa.position,
-          name: sa.name,
-          description: sa.description,
-          slug: sa.slug,
-          dateCreated: sa.date_created,
-          lastModified: sa.last_modified,
-        },
-        create: {
-          id: sa.id,
-          position: sa.position,
-          name: sa.name,
-          description: sa.description,
-          slug: sa.slug,
-          dateCreated: sa.date_created,
-          lastModified: sa.last_modified,
-        },
-      });
+      await prisma.$executeRaw`
+        INSERT INTO study_areas (id, position, name, description, slug, date_created, last_modified)
+        VALUES (${sa.id}, ${sa.position}, ${sa.name}, ${sa.description}, ${sa.slug}, ${sa.date_created}, ${sa.last_modified})
+      `;
     }
 
     console.log(`✓ Migrated ${studyAreas.length} study areas`);

@@ -17,34 +17,12 @@ async function migrateProducts() {
 
     console.log(`Found ${products.length} products to migrate`);
 
-    // Insert into new database
+    // Insert into new database using raw SQL to preserve IDs
     for (const p of products) {
-      await prisma.product.upsert({
-        where: { id: p.id },
-        update: {
-          groupId: p.group_id,
-          name: p.name,
-          description: p.description,
-          price: p.price,
-          priceEur: p.price_eur,
-          priceUsd: p.price_usd,
-          period: p.period,
-          dateCreated: p.date_created,
-          lastModified: p.last_modified,
-        },
-        create: {
-          id: p.id,
-          groupId: p.group_id,
-          name: p.name,
-          description: p.description,
-          price: p.price,
-          priceEur: p.price_eur,
-          priceUsd: p.price_usd,
-          period: p.period,
-          dateCreated: p.date_created,
-          lastModified: p.last_modified,
-        },
-      });
+      await prisma.$executeRaw`
+        INSERT INTO products (id, group_id, name, description, price, price_eur, price_usd, period, date_created, last_modified)
+        VALUES (${p.id}, ${p.group_id}, ${p.name}, ${p.description}, ${p.price}, ${p.price_eur}, ${p.price_usd}, ${p.period}, ${p.date_created}, ${p.last_modified})
+      `;
     }
 
     console.log(`✓ Migrated ${products.length} products`);

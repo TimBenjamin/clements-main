@@ -88,14 +88,14 @@ async function rollback(tableName?: string) {
       await prisma.orgStudentUser.deleteMany();
       console.log("✓ Cleared org_stu_users");
 
-      await prisma.user.deleteMany();
-      console.log("✓ Cleared users");
-
       await prisma.ddiOption.deleteMany();
       console.log("✓ Cleared ddi_options");
 
       await prisma.question.deleteMany();
       console.log("✓ Cleared questions");
+
+      await prisma.user.deleteMany();
+      console.log("✓ Cleared users");
 
       await prisma.inlineImage.deleteMany();
       console.log("✓ Cleared inline_images");

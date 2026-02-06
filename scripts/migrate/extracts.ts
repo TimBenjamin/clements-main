@@ -20,34 +20,12 @@ async function migrateExtracts() {
 
     console.log(`Found ${extracts.length} extracts to migrate`);
 
-    // Insert into new database
+    // Insert into new database using raw SQL to preserve IDs
     for (const extract of extracts) {
-      await prisma.extract.upsert({
-        where: { id: extract.id },
-        update: {
-          filename: extract.filename, // Legacy Flash SWF filename
-          // audioS3Url and audioS3Key should be populated later
-          // after audio files are converted and uploaded to S3
-          audioS3Url: null,
-          audioS3Key: null,
-          title: extract.title,
-          composer: extract.composer,
-          durationSeconds: null, // To be populated later
-          dateCreated: extract.date_created,
-          lastModified: extract.last_modified,
-        },
-        create: {
-          id: extract.id,
-          filename: extract.filename,
-          audioS3Url: null,
-          audioS3Key: null,
-          title: extract.title,
-          composer: extract.composer,
-          durationSeconds: null,
-          dateCreated: extract.date_created,
-          lastModified: extract.last_modified,
-        },
-      });
+      await prisma.$executeRaw`
+        INSERT INTO extracts (id, filename, audio_s3_url, audio_s3_key, title, composer, duration_seconds, date_created, last_modified)
+        VALUES (${extract.id}, ${extract.filename}, ${null}, ${null}, ${extract.title}, ${extract.composer}, ${null}, ${extract.date_created}, ${extract.last_modified})
+      `;
     }
 
     console.log(`✓ Migrated ${extracts.length} extracts`);

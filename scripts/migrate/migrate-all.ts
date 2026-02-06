@@ -16,33 +16,37 @@ async function migrateAll() {
 
   try {
     // Phase 1: Static Content (no dependencies)
-    console.log("PHASE 1: Static Content");
-    console.log("------------------------\n");
+    console.log("PHASE 1: Static Content (No User Dependencies)");
+    console.log("------------------------------------------------\n");
 
-    console.log("1/6: Study Areas");
+    console.log("1/4: Study Areas");
     await migrateStudyAreas();
 
-    console.log("\n2/6: Extracts");
+    console.log("\n2/4: Extracts");
     await migrateExtracts();
 
-    console.log("\n3/6: Inline Images");
+    console.log("\n3/4: Inline Images");
     await migrateInlineImages();
 
-    console.log("\n4/6: Questions");
-    await migrateQuestions();
-
-    console.log("\n5/6: DDI Options");
-    await migrateDdiOptions();
-
-    console.log("\n6/6: Products");
+    console.log("\n4/4: Products");
     await migrateProducts();
 
-    // Phase 2: User Data
-    console.log("\n\nPHASE 2: User Data");
-    console.log("------------------\n");
+    // Phase 2: Users (required before questions due to createdBy/lastModifiedBy)
+    console.log("\n\nPHASE 2: Users");
+    console.log("---------------\n");
 
     console.log("1/1: Users");
     await migrateUsers();
+
+    // Phase 3: Questions (depends on users and study areas)
+    console.log("\n\nPHASE 3: Questions & Content");
+    console.log("-----------------------------\n");
+
+    console.log("1/2: Questions");
+    await migrateQuestions();
+
+    console.log("\n2/2: DDI Options");
+    await migrateDdiOptions();
 
     console.log("\n\n=== Migration Complete ===");
     console.log("\nNext steps:");
