@@ -74,14 +74,15 @@ export async function submitAnswer(formData: FormData): Promise<void> {
  * Starts a new practice test by creating a Test record and generating questions
  */
 export async function startPracticeTest(formData: FormData) {
-  const user = await requireAuth();
+  try {
+    const user = await requireAuth();
 
-  // Parse form data
-  const topics = formData.get("topics")?.toString() || "";
-  const difficulties = formData.get("difficulties")?.toString() || "1|2|3|4|5";
-  const numQuestions = parseInt(formData.get("numQuestions")?.toString() || "10");
-  const timeLimitRequested = formData.get("timeLimit") === "1";
-  const repeatPrevious = formData.get("repeatPrevious")?.toString() || "incorrect";
+    // Parse form data
+    const topics = formData.get("topics")?.toString() || "";
+    const difficulties = formData.get("difficulties")?.toString() || "1|2|3|4|5";
+    const numQuestions = parseInt(formData.get("numQuestions")?.toString() || "10");
+    const timeLimitRequested = formData.get("timeLimit") === "1";
+    const repeatPrevious = formData.get("repeatPrevious")?.toString() || "incorrect";
 
   // Map repeatPrevious to include flags
   let includePreviousCorrect = false;
@@ -135,14 +136,18 @@ export async function startPracticeTest(formData: FormData) {
     includePreviousIncorrect,
   });
 
-  // Store test ID in session
-  const { getPracticeSession } = await import("@/lib/practice-session");
-  const session = await getPracticeSession();
-  session.testId = test.id;
-  await session.save();
+    // Store test ID in session
+    const { getPracticeSession } = await import("@/lib/practice-session");
+    const session = await getPracticeSession();
+    session.testId = test.id;
+    await session.save();
 
-  // Redirect to practice page which will show the test
-  redirect("/practice");
+    // Redirect to practice page with resume action to start immediately
+    redirect("/practice?action=resume");
+  } catch (error) {
+    console.error("Error in startPracticeTest:", error);
+    throw error;
+  }
 }
 
 interface GenerateQuestionsOptions {
@@ -378,7 +383,7 @@ export async function submitAndNext(formData: FormData) {
   });
 
   // Redirect back to practice page
-  redirect("/practice");
+  redirect("/practice?action=resume");
 }
 
 /**
@@ -413,7 +418,7 @@ export async function moveToPrevious() {
     });
   }
 
-  redirect("/practice");
+  redirect("/practice?action=resume");
 }
 
 /**
@@ -468,6 +473,19 @@ export async function exitTest() {
     session.testId = undefined;
     await session.save();
   }
+
+  redirect("/practice");
+}
+
+/**
+ * Clears the practice session (for starting a new test)
+ */
+export async function clearPracticeSession() {
+  const { getPracticeSession } = await import("@/lib/practice-session");
+  const session = await getPracticeSession();
+
+  session.testId = undefined;
+  await session.save();
 
   redirect("/practice");
 }

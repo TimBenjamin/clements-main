@@ -6,9 +6,14 @@ import { PracticeSetupForm } from "@/components/PracticeSetupForm";
 import { PracticeTestQuestion } from "@/components/PracticeTestQuestion";
 import { getPracticeSession } from "@/lib/practice-session";
 
-export default async function PracticePage() {
+export default async function PracticePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ action?: string }>;
+}) {
   const user = await requireAuth();
   const session = await getPracticeSession();
+  const { action } = await searchParams;
 
   // Check if there's an active test in session
   if (session.testId) {
@@ -17,16 +22,18 @@ export default async function PracticePage() {
       where: { id: session.testId },
     });
 
-    // If test not found or doesn't belong to user, clear session
+    // If test not found or doesn't belong to user, show prompt to clear
     if (!test || test.userId !== user.id) {
-      session.testId = undefined;
-      await session.save();
+      return renderInvalidTestPrompt();
     } else if (test.complete) {
-      // If test is complete, redirect to results
-      redirect(`/practice/results?tid=${test.id}`);
-    } else {
-      // Show the current question
+      // If test is complete, show option to view results or start new
+      return renderCompletedTestPrompt(test.id);
+    } else if (action === "resume") {
+      // User explicitly wants to resume
       return renderTestQuestion(test, user.id);
+    } else {
+      // Test exists and incomplete - offer to resume or start new
+      return renderResumePrompt(test);
     }
   }
 
@@ -39,11 +46,8 @@ async function renderTestQuestion(test: any, userId: number) {
   const questionIds = test.questions?.split(",").map((id: string) => parseInt(id)) || [];
 
   if (questionIds.length === 0) {
-    // Invalid test, clear session
-    const session = await getPracticeSession();
-    session.testId = undefined;
-    await session.save();
-    redirect("/practice");
+    // Invalid test, show prompt to clear
+    return renderInvalidTestPrompt();
   }
 
   const currentIndex = test.currentQuestion || 0;
@@ -168,6 +172,94 @@ async function renderTestQuestion(test: any, userId: number) {
             </dl>
           </details>
         </footer>
+      </article>
+    </main>
+  );
+}
+
+async function renderInvalidTestPrompt() {
+  const { clearPracticeSession } = await import("@/app/actions/practice");
+
+  return (
+    <main className="container">
+      <article>
+        <header>
+          <h1>Invalid Test Session</h1>
+        </header>
+
+        <section>
+          <p>
+            Your session contains an invalid or expired test. Please clear your session
+            to start a new practice test.
+          </p>
+
+          <form action={clearPracticeSession}>
+            <button type="submit">Clear Session &amp; Start New Test</button>
+          </form>
+        </section>
+      </article>
+    </main>
+  );
+}
+
+async function renderResumePrompt(test: any) {
+  const { clearPracticeSession } = await import("@/app/actions/practice");
+  const questionIds = test.questions?.split(",").map((id: string) => parseInt(id)) || [];
+  const currentIndex = test.currentQuestion || 0;
+
+  return (
+    <main className="container">
+      <article>
+        <header>
+          <h1>Resume Practice Test?</h1>
+        </header>
+
+        <section>
+          <p>
+            You have an incomplete practice test in progress. You're currently on question{" "}
+            {currentIndex + 1} of {questionIds.length}.
+          </p>
+
+          <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+            <Link href="/practice?action=resume" role="button">
+              Resume Test
+            </Link>
+            <form action={clearPracticeSession} style={{ margin: 0 }}>
+              <button type="submit" className="secondary">
+                Start New Test
+              </button>
+            </form>
+          </div>
+        </section>
+      </article>
+    </main>
+  );
+}
+
+async function renderCompletedTestPrompt(testId: number) {
+  const { clearPracticeSession } = await import("@/app/actions/practice");
+
+  return (
+    <main className="container">
+      <article>
+        <header>
+          <h1>Test Complete</h1>
+        </header>
+
+        <section>
+          <p>You have a completed test in your session.</p>
+
+          <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+            <Link href={`/practice/results?tid=${testId}`} role="button">
+              View Results
+            </Link>
+            <form action={clearPracticeSession} style={{ margin: 0 }}>
+              <button type="submit" className="secondary">
+                Start New Test
+              </button>
+            </form>
+          </div>
+        </section>
       </article>
     </main>
   );

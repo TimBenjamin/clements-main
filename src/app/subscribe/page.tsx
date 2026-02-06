@@ -8,7 +8,7 @@ export default async function SubscribePage() {
     <main className="container">
       <article style={{ maxWidth: "800px", margin: "2rem auto" }}>
         <header>
-          <h1>Subscribe to Clements Music Theory</h1>
+          <h1>Subscribe to Clements Theory</h1>
           <p>Get unlimited access to all features</p>
         </header>
 

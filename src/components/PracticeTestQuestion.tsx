@@ -27,6 +27,7 @@ export function PracticeTestQuestion({
 }: PracticeTestQuestionProps) {
   const [selectedOption, setSelectedOption] = useState<number | null>(existingAnswer);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   // Convert inline MCQ options to array and shuffle them
   const mcqOptions: McqOption[] = useMemo(() => {
@@ -89,60 +90,43 @@ export function PracticeTestQuestion({
     e.preventDefault();
 
     if (selectedOption === null) {
-      alert("Please select an answer");
+      setValidationError("Please select an answer");
       return;
     }
 
+    setValidationError(null);
     setIsSubmitting(true);
 
-    try {
-      const formData = new FormData();
-      formData.append("questionId", question.id.toString());
-      formData.append("selectedAnswer", selectedOption.toString());
+    const formData = new FormData();
+    formData.append("questionId", question.id.toString());
+    formData.append("selectedAnswer", selectedOption.toString());
 
-      await submitAndNext(formData);
-    } catch (error) {
-      console.error("Error submitting answer:", error);
-      alert("Failed to submit answer. Please try again.");
-      setIsSubmitting(false);
-    }
+    await submitAndNext(formData);
   };
 
   const handlePrevious = async () => {
     setIsSubmitting(true);
-    try {
-      await moveToPrevious();
-    } catch (error) {
-      console.error("Error moving to previous:", error);
-      alert("Failed to go to previous question.");
-      setIsSubmitting(false);
-    }
+    await moveToPrevious();
   };
 
-  const handleFinish = async () => {
-    if (confirm("Are you sure you want to finish this test and save your answers?")) {
-      setIsSubmitting(true);
-      try {
-        await finishTest();
-      } catch (error) {
-        console.error("Error finishing test:", error);
-        alert("Failed to finish test.");
-        setIsSubmitting(false);
-      }
-    }
+  const handleFinish = () => {
+    const dialog = document.getElementById("finish-dialog") as HTMLDialogElement;
+    dialog?.showModal();
   };
 
-  const handleExit = async () => {
-    if (confirm("Are you sure you want to exit without saving your answers?")) {
-      setIsSubmitting(true);
-      try {
-        await exitTest();
-      } catch (error) {
-        console.error("Error exiting test:", error);
-        alert("Failed to exit test.");
-        setIsSubmitting(false);
-      }
-    }
+  const handleExit = () => {
+    const dialog = document.getElementById("exit-dialog") as HTMLDialogElement;
+    dialog?.showModal();
+  };
+
+  const confirmFinish = async () => {
+    setIsSubmitting(true);
+    await finishTest();
+  };
+
+  const confirmExit = async () => {
+    setIsSubmitting(true);
+    await exitTest();
   };
 
   // For DDI questions, we need different UI (not implemented yet)
@@ -214,6 +198,12 @@ export function PracticeTestQuestion({
         )}
 
         <form onSubmit={handleSubmitAndNext}>
+          {validationError && (
+            <p style={{ color: "var(--del-color)", marginBottom: "1rem" }}>
+              {validationError}
+            </p>
+          )}
+
           <fieldset>
             <legend>Select your answer:</legend>
 
@@ -224,7 +214,10 @@ export function PracticeTestQuestion({
                   name="answer"
                   value={option.id}
                   checked={selectedOption === option.id}
-                  onChange={() => setSelectedOption(option.id)}
+                  onChange={() => {
+                    setSelectedOption(option.id);
+                    setValidationError(null);
+                  }}
                   disabled={isSubmitting}
                 />
                 {option.text && <span>{option.text}</span>}
@@ -280,6 +273,79 @@ export function PracticeTestQuestion({
           </div>
         </form>
       </section>
+
+      {/* Finish Test Dialog */}
+      <dialog id="finish-dialog">
+        <article>
+          <header>
+            <button
+              aria-label="Close"
+              rel="prev"
+              onClick={() => {
+                const dialog = document.getElementById("finish-dialog") as HTMLDialogElement;
+                dialog?.close();
+              }}
+            ></button>
+            <h3>Finish Test</h3>
+          </header>
+          <p>Are you sure you want to finish this test and save your answers?</p>
+          <footer>
+            <button
+              className="secondary"
+              onClick={() => {
+                const dialog = document.getElementById("finish-dialog") as HTMLDialogElement;
+                dialog?.close();
+              }}
+            >
+              Cancel
+            </button>
+            <form action={finishTest} style={{ display: "inline", margin: 0 }}>
+              <button type="submit" onClick={confirmFinish} disabled={isSubmitting}>
+                {isSubmitting ? "Finishing..." : "Finish Test"}
+              </button>
+            </form>
+          </footer>
+        </article>
+      </dialog>
+
+      {/* Exit Test Dialog */}
+      <dialog id="exit-dialog">
+        <article>
+          <header>
+            <button
+              aria-label="Close"
+              rel="prev"
+              onClick={() => {
+                const dialog = document.getElementById("exit-dialog") as HTMLDialogElement;
+                dialog?.close();
+              }}
+            ></button>
+            <h3>Exit Without Saving</h3>
+          </header>
+          <p>Are you sure you want to exit without saving your answers?</p>
+          <footer>
+            <button
+              className="secondary"
+              onClick={() => {
+                const dialog = document.getElementById("exit-dialog") as HTMLDialogElement;
+                dialog?.close();
+              }}
+            >
+              Cancel
+            </button>
+            <form action={exitTest} style={{ display: "inline", margin: 0 }}>
+              <button
+                type="submit"
+                className="secondary"
+                onClick={confirmExit}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Exiting..." : "Exit Without Saving"}
+              </button>
+            </form>
+          </footer>
+        </article>
+      </dialog>
     </div>
   );
 }

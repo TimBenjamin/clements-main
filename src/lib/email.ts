@@ -21,11 +21,11 @@ export async function sendPasswordResetEmail(
   const emailContent = {
     from: FROM_EMAIL,
     to,
-    subject: "Reset Your Password - Clements Music Theory",
+    subject: "Reset Your Password - Clements Theory",
     text: `
 Hi ${name},
 
-You requested to reset your password for Clements Music Theory.
+You requested to reset your password for Clements Theory.
 
 Click the link below to set a new password:
 ${resetUrl}
@@ -35,7 +35,7 @@ This link will expire in 1 hour.
 If you didn't request this, you can safely ignore this email.
 
 Best regards,
-Clements Music Theory Team
+Clements Theory Team
     `.trim(),
     html: `
 <!DOCTYPE html>
@@ -50,7 +50,7 @@ Clements Music Theory Team
 
     <p>Hi ${name},</p>
 
-    <p>You requested to reset your password for Clements Music Theory.</p>
+    <p>You requested to reset your password for Clements Theory.</p>
 
     <p>
       <a href="${resetUrl}" style="display: inline-block; background-color: #3498db; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; margin: 10px 0;">
@@ -69,7 +69,7 @@ Clements Music Theory Team
 
     <p style="color: #7f8c8d; font-size: 14px;">
       Best regards,<br>
-      Clements Music Theory Team
+      Clements Theory Team
     </p>
   </div>
 </body>
@@ -106,29 +106,29 @@ export async function sendWelcomeEmail(
   const emailContent = {
     from: FROM_EMAIL,
     to,
-    subject: "Welcome to Clements Music Theory",
+    subject: "Welcome to Clements Theory",
     text: `
 Hi ${name},
 
-Welcome to Clements Music Theory!
+Welcome to Clements Theory!
 
 Your account has been created successfully. You can now log in and start practicing music theory.
 
 Get started: ${SITE_URL}/dashboard
 
 Best regards,
-Clements Music Theory Team
+Clements Theory Team
     `.trim(),
     html: `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Welcome to Clements Music Theory</title>
+  <title>Welcome to Clements Theory</title>
 </head>
 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
   <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-    <h1 style="color: #2c3e50;">Welcome to Clements Music Theory!</h1>
+    <h1 style="color: #2c3e50;">Welcome to Clements Theory!</h1>
 
     <p>Hi ${name},</p>
 
@@ -144,7 +144,7 @@ Clements Music Theory Team
 
     <p style="color: #7f8c8d; font-size: 14px;">
       Best regards,<br>
-      Clements Music Theory Team
+      Clements Theory Team
     </p>
   </div>
 </body>

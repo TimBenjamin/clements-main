@@ -11,7 +11,7 @@ export async function Navigation() {
         <li>
           <strong>
             <Link href="/" style={{ textDecoration: "none", color: "inherit" }}>
-              Clements Music Theory
+              Clements Theory
             </Link>
           </strong>
         </li>
@@ -23,7 +23,7 @@ export async function Navigation() {
               <Link href="/practice">Practice</Link>
             </li>
             <li>
-              <Link href="/tests">Tests</Link>
+              <Link href="/study">Study</Link>
             </li>
             <li>
               <Link href="/progress">Progress</Link>

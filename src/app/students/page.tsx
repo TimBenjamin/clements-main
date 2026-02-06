@@ -2,7 +2,8 @@ import { requireAuth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { inviteStudent, removeStudent } from "../actions/students";
+import { inviteStudent } from "../actions/students";
+import { StudentTableRow } from "@/components/StudentTableRow";
 
 export default async function StudentsPage({
   searchParams,
@@ -153,66 +154,12 @@ export default async function StudentsPage({
                   </tr>
                 </thead>
                 <tbody>
-                  {orgStudents.map((orgStudent) => {
-                    const student = orgStudent.student;
-                    return (
-                      <tr key={orgStudent.id}>
-                        <td>{student.name}</td>
-                        <td>
-                          <code>{student.displayname}</code>
-                        </td>
-                        <td>
-                          <small>{student.email}</small>
-                        </td>
-                        <td>{student._count.tests}</td>
-                        <td>{student._count.userQuestions}</td>
-                        <td>
-                          <div style={{ display: "flex", gap: "0.5rem" }}>
-                            <Link
-                              href={`/students/${student.id}`}
-                              role="button"
-                              className="outline"
-                              style={{
-                                padding: "0.25rem 0.5rem",
-                                fontSize: "0.875rem",
-                              }}
-                            >
-                              View
-                            </Link>
-                            <form
-                              action={removeStudent}
-                              style={{ margin: 0 }}
-                              onSubmit={(e) => {
-                                if (
-                                  !confirm(
-                                    `Remove ${student.name}? They will lose access to your organization.`
-                                  )
-                                ) {
-                                  e.preventDefault();
-                                }
-                              }}
-                            >
-                              <input
-                                type="hidden"
-                                name="studentId"
-                                value={student.id}
-                              />
-                              <button
-                                type="submit"
-                                className="secondary"
-                                style={{
-                                  padding: "0.25rem 0.5rem",
-                                  fontSize: "0.875rem",
-                                }}
-                              >
-                                Remove
-                              </button>
-                            </form>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {orgStudents.map((orgStudent) => (
+                    <StudentTableRow
+                      key={orgStudent.id}
+                      student={orgStudent.student}
+                    />
+                  ))}
                 </tbody>
               </table>
             </div>

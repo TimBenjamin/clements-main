@@ -476,6 +476,7 @@ model UserQuestion {
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   question Question @relation(fields: [questionId], references: [id])
 
+  @@unique([userId, questionId, testId])
   @@index([userId])
   @@index([questionId])
   @@index([testId])

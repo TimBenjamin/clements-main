@@ -23,7 +23,7 @@ export default async function LoginPage({
       <article style={{ maxWidth: "500px", margin: "2rem auto" }}>
         <header>
           <h1>Log In</h1>
-          <p>Welcome back to Clements Music Theory</p>
+          <p>Welcome back to Clements Theory</p>
         </header>
 
         {success === "password_reset" && (

@@ -15,7 +15,7 @@ export default async function RegisterPage() {
       <article style={{ maxWidth: "600px", margin: "2rem auto" }}>
         <header>
           <h1>Create an Account</h1>
-          <p>Join Clements Music Theory to start learning</p>
+          <p>Join Clements Theory to start learning</p>
         </header>
 
         <form action={register}>

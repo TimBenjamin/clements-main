@@ -23,6 +23,7 @@ export function PracticeSetupForm({ studyAreas }: PracticeSetupFormProps) {
   const [timeLimit, setTimeLimit] = useState(false);
   const [repeatPrevious, setRepeatPrevious] = useState<"incorrect" | "all" | "none">("incorrect");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const toggleTopic = (id: number) => {
     const newSet = new Set(selectedTopics);
@@ -32,6 +33,7 @@ export function PracticeSetupForm({ studyAreas }: PracticeSetupFormProps) {
       newSet.add(id);
     }
     setSelectedTopics(newSet);
+    setValidationError(null);
   };
 
   const toggleDifficulty = (level: number) => {
@@ -42,41 +44,44 @@ export function PracticeSetupForm({ studyAreas }: PracticeSetupFormProps) {
       newSet.add(level);
     }
     setSelectedDifficulties(newSet);
+    setValidationError(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (selectedTopics.size === 0) {
-      alert("Please select at least one topic");
+      setValidationError("Please select at least one topic");
       return;
     }
 
     if (selectedDifficulties.size === 0) {
-      alert("Please select at least one difficulty level");
+      setValidationError("Please select at least one difficulty level");
       return;
     }
 
+    setValidationError(null);
     setIsSubmitting(true);
 
-    try {
-      const formData = new FormData();
-      formData.append("topics", Array.from(selectedTopics).join(","));
-      formData.append("difficulties", Array.from(selectedDifficulties).join("|"));
-      formData.append("numQuestions", numQuestions.toString());
-      formData.append("timeLimit", timeLimit ? "1" : "0");
-      formData.append("repeatPrevious", repeatPrevious);
+    const formData = new FormData();
+    formData.append("topics", Array.from(selectedTopics).join(","));
+    formData.append("difficulties", Array.from(selectedDifficulties).join("|"));
+    formData.append("numQuestions", numQuestions.toString());
+    formData.append("timeLimit", timeLimit ? "1" : "0");
+    formData.append("repeatPrevious", repeatPrevious);
 
-      await startPracticeTest(formData);
-    } catch (error) {
-      console.error("Error starting practice test:", error);
-      alert("Failed to start practice test. Please try again.");
-      setIsSubmitting(false);
-    }
+    // Call the server action - redirects will be handled automatically
+    await startPracticeTest(formData);
   };
 
   return (
     <form onSubmit={handleSubmit}>
+      {validationError && (
+        <p style={{ color: "var(--del-color)", marginBottom: "1rem" }}>
+          {validationError}
+        </p>
+      )}
+
       {/* Topics */}
       <fieldset>
         <legend>Include which topics?</legend>
